@@ -1,4 +1,4 @@
-package me.blzr.aggregator
+package me.blzr.aggregator.task
 
 import org.springframework.core.io.ClassPathResource
 

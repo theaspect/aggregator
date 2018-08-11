@@ -1,6 +1,7 @@
 package me.blzr.aggregator
 
 import com.google.gson.Gson
+import me.blzr.aggregator.task.ScriptRunner
 import org.springframework.stereotype.Controller
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
