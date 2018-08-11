@@ -1,13 +1,12 @@
 package me.blzr.aggregator
 
-import java.io.File
-import java.lang.ClassLoader.getSystemResource
+import org.springframework.core.io.ClassPathResource
 
 object ScriptRunner {
-    private const val SCRIPT = "script.php"
+    private const val SCRIPT = "/script.php"
 
     private fun loadScript(path: String) =
-            File(getSystemResource(path).file).readText()
+            ClassPathResource(path).inputStream.bufferedReader().readText()
 
     fun executeScript(stdin: String): String {
         val process = ProcessBuilder("php", "-r", loadScript(SCRIPT)).start()
