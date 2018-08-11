@@ -10,6 +10,7 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
         classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+        classpath("org.junit.platform:junit-platform-gradle-plugin:1.2.0")
     }
 }
 
@@ -17,9 +18,18 @@ apply plugin: 'kotlin'
 apply plugin: 'kotlin-spring'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.junit.platform.gradle.plugin'
+
+junitPlatform {
+    filters {
+        engines {
+            include 'spek'
+        }
+    }
+}
 
 group = 'me.blzr'
-version = '0.0.1-SNAPSHOT'
+version = '0.2'
 sourceCompatibility = 1.8
 compileKotlin {
     kotlinOptions {
@@ -36,8 +46,8 @@ compileTestKotlin {
 
 repositories {
     mavenCentral()
+    maven { url "http://dl.bintray.com/jetbrains/spek" }
 }
-
 
 dependencies {
     compile('com.google.code.gson:gson')
@@ -51,4 +61,19 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compile("org.jetbrains.kotlin:kotlin-reflect")
     testCompile('org.springframework.boot:spring-boot-starter-test')
+
+    // Spek Framework
+    // See https://spekframework.github.io/spek/docs/latest/
+    testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
+    testCompile ('org.jetbrains.spek:spek-api:1.1.5') {
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    testRuntime ('org.jetbrains.spek:spek-junit-platform-engine:1.1.5') {
+        exclude group: 'org.junit.platform'
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    // Mocks
+    // see https://mockk.io
+    testImplementation "io.mockk:mockk:1.8.6"
 }
