@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script>
+        let socket;
+
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+        function submit() {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.close(1000)
+            }
+
+            socket = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws");
+            socket.onopen = ev => {
+                document.getElementById("response").innerHTML = ev.type + "<br/>";
+
+                socket.send(JSON.stringify({
+                    foo: document.getElementById("foo").value,
+                    bar: document.getElementById("bar").value
+                }));
+            };
+            socket.onmessage = (data) => document.getElementById("response").innerHTML += "<br/>" + data.data;
+            socket.onclose = ev => document.getElementById("response").innerHTML += "<br/>" + ev.type;
+        }
+
+    </script>
+</head>
+<body>
+<div>
+    <label for="foo">Foo:</label><input id="foo" name="foo" value="foo"/><br/>
+    <label for="bar">Bar:</label><input id="bar" name="bar" value="bar"/><br/>
+    <button onclick="submit()" name="submit">Open Web Socket</button>
+</div>
+<div id="response"></div>
+</body>
+</html>
