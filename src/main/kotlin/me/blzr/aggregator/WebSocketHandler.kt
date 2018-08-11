@@ -11,13 +11,14 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 class WebSocketHandler : TextWebSocketHandler() {
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
         Thread(Runnable {
-            for (i in 1..3) {
-                Thread.sleep(1000)
-                if (session.isOpen) {
-                    session.sendMessage(
-                            TextMessage("Response $i: ${Gson().fromJson(message.payload, Map::class.java)}"))
-                }
+            val gson = Gson()
+            val before = gson.toJson(mapOf("before" to gson.fromJson(message.payload, Map::class.java)))
+            val after = gson.toJson(mapOf("after" to gson.fromJson(ScriptRunner.executeScript(before), Map::class.java)))
+
+            if (session.isOpen) {
+                session.sendMessage(TextMessage(after))
             }
+
             session.close(CloseStatus.NORMAL)
         }).start()
     }
