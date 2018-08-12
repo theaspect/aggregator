@@ -1,18 +1,34 @@
 package me.blzr.aggregator.task
 
 import com.google.gson.Gson
-import me.blzr.aggregator.fromJson
+import me.blzr.aggregator.exception.ItemsJsonException
 
 class ItemsTask(request: ItemsRequest) :
         ScriptTask<ItemsTask.ItemsRequest, ItemsTask.ItemsResponse>(request) {
 
     override fun getScript(): List<String> = ITEMS_SCRIPT
-    override fun parse(input: String): ItemsResponse = Gson().fromJson(input)
+    override fun parse(input: String): ItemsResponse {
+        val json = Gson().fromJson(input, Map::class.java)
+        return if (json.containsKey(ItemsTask.ITEMS_FIELD) && json[ItemsTask.ITEMS_FIELD] is List<*>) {
+            if (json.containsKey(ItemsTask.SUPPLIERS_FIELD) && json[ItemsTask.SUPPLIERS_FIELD] is List<*>) {
+                ItemsResponse(
+                        json[ItemsTask.SUPPLIERS_FIELD] as List<*>,
+                        json[ItemsTask.ITEMS_FIELD] as List<*>)
+            } else {
+                ItemsResponse(
+                        json[ItemsTask.SUPPLIERS_FIELD] as List<*>)
+            }
+        } else {
+            throw ItemsJsonException()
+        }
+    }
 
-    class ItemsRequest : Request
-    class ItemsResponse : Response
+    class ItemsRequest(params: Any) : Request
+    class ItemsResponse(val items: List<*>, val suppliers: List<*> = emptyList<Any>()) : Response
 
     companion object {
         val ITEMS_SCRIPT = listOf("php", "./items.php")
+        const val SUPPLIERS_FIELD = "suppliers"
+        const val ITEMS_FIELD = "items"
     }
 }

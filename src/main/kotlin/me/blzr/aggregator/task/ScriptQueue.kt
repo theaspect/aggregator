@@ -1,19 +1,19 @@
 package me.blzr.aggregator.task
 
 import me.blzr.aggregator.exception.SessionTimeoutException
+import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.function.Function
 
+@Component
 class ScriptQueue {
     // TODO For java 9 it will be native
-    private val watchdog = Executors.newScheduledThreadPool(QUEUE)
+    private val watchdog = Executors.newScheduledThreadPool(WATCHDOG_POOL)
     private val executor = Executors.newFixedThreadPool(QUEUE)
 
-    private fun <REQ : ScriptTask.Request, RES : ScriptTask.Response> addTask(script: ScriptTask<REQ, RES>) {
+    fun <REQ : ScriptTask.Request, RES : ScriptTask.Response> addTask(script: ScriptTask<REQ, RES>): CompletableFuture<RES> {
         val cFuture = CompletableFuture<RES>()
-        cFuture.thenApplyAsync(Function<RES, Unit> { res -> businessLogic(res) }, executor)
 
         val future = executor.submit {
             try {
@@ -30,18 +30,13 @@ class ScriptQueue {
                 future.cancel(true)
             }
         }, SCRIPT_TIMEOUT, TimeUnit.SECONDS)
-    }
 
-    private fun businessLogic(res: ScriptTask.Response) {
-        when (res) {
-            is ItemsTask.ItemsResponse -> TODO()
-            is SuppliersTask.SuppliersResponse -> TODO()
-            else -> throw IllegalStateException("Unknown Task Type $res")
-        }
+        return cFuture
     }
 
     companion object {
         const val QUEUE = 20
+        const val WATCHDOG_POOL = 5
         const val SCRIPT_TIMEOUT = 10L
     }
 }

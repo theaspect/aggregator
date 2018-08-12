@@ -1,24 +1,32 @@
 package me.blzr.aggregator.session
 
 import me.blzr.aggregator.exception.SessionReusedException
+import org.springframework.stereotype.Component
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
+@Component
 class SessionRegistry {
     private val watchdog = Executors.newScheduledThreadPool(WATCHDOG_POOL)
-    private val sessions : MutableList<Session> = mutableListOf()
+    // Primary queue of new sessions
+    private val sessions = LinkedBlockingQueue<Session>()
 
     fun addSession(session: Session) {
         if(sameWebSocketSession(session)){
             throw SessionReusedException()
         }
-        sessions.add(session)
+        sessions.offer(session)
         watchdog.schedule({
-            if (session.isAlive()) {
+            if (session.isOpen()) {
                 session.destroy()
             }
         }, TIMEOUT, TimeUnit.SECONDS)
     }
+
+    // TODO wrap into stream
+    fun getSession(): Session =
+            sessions.take()
 
     private fun sameWebSocketSession(session: Session) =
             sessions.any { it.session == session.session }

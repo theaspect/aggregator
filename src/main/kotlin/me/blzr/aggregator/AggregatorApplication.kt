@@ -13,10 +13,12 @@ class AggregatorApplication
 
 @Configuration
 @EnableWebSocket
-class WebSocketConfig : WebSocketConfigurer {
+class WebSocketConfig(
+        val businessLogic: BusinessLogic) : WebSocketConfigurer {
+
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
         registry.addHandler(EchoWebSocketHandler(), "/echo")
-        registry.addHandler(WebSocketHandler(), "/ws")
+        registry.addHandler(WebSocketHandler(businessLogic), "/ws")
     }
 }
 
