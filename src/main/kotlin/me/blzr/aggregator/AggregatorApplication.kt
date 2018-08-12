@@ -15,6 +15,7 @@ class AggregatorApplication
 @EnableWebSocket
 class WebSocketConfig : WebSocketConfigurer {
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
+        registry.addHandler(EchoWebSocketHandler(), "/echo")
         registry.addHandler(WebSocketHandler(), "/ws")
     }
 }
