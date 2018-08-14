@@ -21,7 +21,8 @@ class SuppliersTask(request: SuppliersRequest) :
     data class SuppliersResponse(val items: List<*>) : Response
 
     companion object {
-        val SUPPLIERS_SCRIPT = listOf("php", "./suppliers.php")
+        const val PATH = "/Users/theaspect/Workspace/aggregator/script"
+        val SUPPLIERS_SCRIPT = listOf("/usr/bin/php", "$PATH/suppliers.php")
         const val SUPPLIERS_FIELD = "suppliers"
     }
 }

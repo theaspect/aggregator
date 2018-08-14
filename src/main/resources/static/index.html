@@ -7,32 +7,55 @@
         let socket;
 
         // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
-        function submit() {
+        function submit(url, data, response) {
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.close(1000)
             }
 
-            socket = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/ws");
+            socket = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/" + url);
             socket.onopen = ev => {
-                document.getElementById("response").innerHTML = ev.type + "<br/>";
+                document.getElementById(response).innerHTML = ev.type + "<br/>";
 
-                socket.send(JSON.stringify({
-                    foo: document.getElementById("foo").value,
-                    bar: document.getElementById("bar").value
-                }));
+                socket.send(data);
             };
-            socket.onmessage = (data) => document.getElementById("response").innerHTML += "<br/>" + data.data;
-            socket.onclose = ev => document.getElementById("response").innerHTML += "<br/>" + ev.type;
+            socket.onmessage = (data) => document.getElementById(response).innerHTML += "<br/>" + data.data;
+            socket.onclose = ev => document.getElementById(response).innerHTML += "<br/>" + ev.type;
+        }
+
+        function echo() {
+            const data = JSON.stringify({
+                foo: document.getElementById("foo").value,
+                bar: document.getElementById("bar").value
+            });
+
+            submit('echo', data, 'response-echo');
+        }
+
+        function normal() {
+            const data = JSON.stringify({
+                "code": "normal",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-normal');
         }
 
     </script>
 </head>
 <body>
 <div>
+    <h1>Echo Test</h1>
     <label for="foo">Foo:</label><input id="foo" name="foo" value="foo"/><br/>
     <label for="bar">Bar:</label><input id="bar" name="bar" value="bar"/><br/>
-    <button onclick="submit()" name="submit">Open Web Socket</button>
+    <button onclick="echo()" name="submit">Send Echo Request</button>
+    <div id="response-echo"></div>
 </div>
-<div id="response"></div>
+<div>
+    <h1>Normal request</h1>
+    <button onclick="normal()" name="submit">Send Normal Request</button>
+    <div id="response-normal"></div>
+</div>
 </body>
 </html>

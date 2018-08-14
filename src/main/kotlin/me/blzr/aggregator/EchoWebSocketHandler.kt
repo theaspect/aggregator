@@ -1,6 +1,7 @@
 package me.blzr.aggregator
 
 import com.google.gson.Gson
+import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Controller
 import org.springframework.web.socket.CloseStatus
@@ -10,14 +11,19 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 
 @Controller
 class EchoWebSocketHandler : TextWebSocketHandler() {
+    private final val log = LoggerFactory.getLogger(EchoWebSocketHandler::class.java)
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+
         Thread(Runnable {
             val gson = Gson()
             val before = gson.toJson(mapOf("before" to gson.fromJson(message.payload, Map::class.java)))
             val after = gson.toJson(mapOf("after" to gson.fromJson(executeScript(before), Map::class.java)))
 
-            if (session.isOpen) {
-                session.sendMessage(TextMessage(after))
+            for(i in 0..3) {
+                if (session.isOpen) {
+                    Thread.sleep(1000)
+                    session.sendMessage(TextMessage(after))
+                }
             }
 
             session.close(CloseStatus.NORMAL)

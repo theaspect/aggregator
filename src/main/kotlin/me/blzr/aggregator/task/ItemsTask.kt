@@ -27,8 +27,9 @@ class ItemsTask(request: ItemsRequest) :
     class ItemsResponse(val items: List<*>, val suppliers: List<*> = emptyList<Any>()) : Response
 
     companion object {
-        val ITEMS_SCRIPT = listOf("php", "./items.php")
+        const val PATH = "/Users/theaspect/Workspace/aggregator/script"
         const val SUPPLIERS_FIELD = "suppliers"
         const val ITEMS_FIELD = "items"
+        val ITEMS_SCRIPT = listOf("/usr/bin/php", "$PATH/items.php")
     }
 }
