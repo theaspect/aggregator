@@ -21,7 +21,7 @@ object SessionSpek : Spek({
             val session = Session(config, mockk(), TextMessage("foo bar"))
             it("should fail") {
                 assertFailsWith<RequestJsonException> {
-                    session.getAllowedParams()
+                    session.params
                 }
             }
         }
@@ -34,7 +34,7 @@ object SessionSpek : Spek({
             ))))
             it("should fail") {
                 assertFailsWith<IllegalRequestException> {
-                    session.getAllowedParams()
+                    session.params
                 }
             }
         }
@@ -48,7 +48,7 @@ object SessionSpek : Spek({
             )
             val session = Session(config, mockk(), TextMessage(Gson().toJson(params)))
             it("should succeed") {
-                assertEquals(params, session.getAllowedParams())
+                assertEquals(params, session.params)
             }
         }
     }

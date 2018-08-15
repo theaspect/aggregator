@@ -21,18 +21,23 @@ class SuppliersTask(
 
             throw SuppliersJsonException()
         }
+        try {
+            if (json.containsKey(config.fields.suppliers) && json[config.fields.suppliers] is List<*>) {
+                return SuppliersResponse(json[config.fields.suppliers] as List<*>)
+            } else {
+                log.error("Can't parse response $this: $input")
 
-        if (json.containsKey(config.fields.suppliers) && json[config.fields.suppliers] is List<*>) {
-            return SuppliersResponse(json[config.fields.suppliers] as List<*>)
-        } else {
+                throw SuppliersResponseException()
+            }
+        } catch (e: Exception) {
             log.error("Can't parse response $this: $input")
 
             throw SuppliersResponseException()
         }
     }
 
-    data class SuppliersRequest(val params: Map<String, String>) : Request
-    data class SuppliersResponse(val items: List<*>) : Response
+    data class SuppliersRequest(val params: Map<String, String>)
+    data class SuppliersResponse(val items: List<*>)
 
     override fun toString(): String = "Suppliers Task: $state $request"
 }

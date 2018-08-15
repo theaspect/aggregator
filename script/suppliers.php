@@ -1,5 +1,9 @@
 <?php
 
+function delay($max_ms){
+    usleep(rand(0,$max_ms*1000));
+}
+
 //Читаем строку потока
 if($stdin_line = fgets(STDIN)) {
     error_log($stdin_line);
@@ -52,5 +56,7 @@ if($stdin_line = fgets(STDIN)) {
         error_log("Unrecognized");
         exit(-1);
     }
+
+    delay(1000);
 }
 ?>

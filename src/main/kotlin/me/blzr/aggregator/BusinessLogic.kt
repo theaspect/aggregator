@@ -1,6 +1,8 @@
 package me.blzr.aggregator
 
 import com.google.gson.Gson
+import me.blzr.aggregator.exception.AggregatorException
+import me.blzr.aggregator.exception.UnrecognizedException
 import me.blzr.aggregator.session.Session
 import me.blzr.aggregator.session.SessionRegistry
 import me.blzr.aggregator.task.ItemsTask
@@ -20,19 +22,28 @@ class BusinessLogic(
         val sessionRegistry: SessionRegistry,
         val scriptQueue: ScriptQueue) {
     private final val log = LoggerFactory.getLogger(BusinessLogic::class.java)
-    private final val executor = Executors.newSingleThreadExecutor()
+    private final val executor = Executors.newFixedThreadPool(2)
 
     init {
         executor.submit {
+            // This is blocking await
             while (true) {
-                suppliers(sessionRegistry.getSession())
+                suppliers(sessionRegistry.awaitSession())
             }
         }
     }
 
     // Should we create two queues
     fun newSession(session: WebSocketSession, message: TextMessage) {
-        sessionRegistry.addSession(Session(config, session, message))
+        val s = Session(config, session, message)
+        sessionRegistry.addSession(s)
+        s.completableFuture.thenApplyAsync(Function { normal: Boolean ->
+            if (normal) {
+                session.close(CloseStatus.NORMAL)
+            } else {
+                session.close(CloseStatus.SERVER_ERROR)
+            }
+        }, executor)
     }
 
     fun closeSession(session: WebSocketSession, status: CloseStatus) {
@@ -43,43 +54,43 @@ class BusinessLogic(
      * 1. Generate onSuppliers task from onRequest queus
      */
     private fun suppliers(session: Session) {
-        log.debug("Starting new session")
-        val task = SuppliersTask(config, SuppliersTask.SuppliersRequest(session.getAllowedParams()))
+        log.debug("Suppliers step $session")
+        val task = SuppliersTask(config, SuppliersTask.SuppliersRequest(session.params))
         session.addTask(task)
         scriptQueue
                 .addTask(task)
                 .thenApplyAsync(Function<SuppliersTask.SuppliersResponse, Unit> { res -> items(session, res) }, executor)
                 .exceptionally { e ->
-                    log.error("Error in suppliers", e)
-                    sendError(session, e)
+                    log.error("Error in suppliers $session", e)
+                    // E is j.u.c.CompletionException
+                    sendError(session, e.cause ?: e)
                     session.destroy()
-                }
+                }.thenApply { session.removeTask(task) }
     }
 
     /**
-     * 2. Generate onItems task from onSuppliers
+     * 2. Generate response task from onSuppliers
      */
     private fun items(session: Session, suppliers: SuppliersTask.SuppliersResponse) {
-        log.debug("Suppliers Response")
+        log.debug("Items step $session")
         suppliers.items.filterNotNull().forEach { item ->
-            val task = ItemsTask(config, ItemsTask.ItemsRequest(item))
+            val task = ItemsTask(config, item)
             session.addTask(task)
             scriptQueue
                     .addTask(task)
-                    .thenApplyAsync(Function<ItemsTask.ItemsResponse, Unit> { res -> onItems(session, res) }, executor)
+                    .thenApplyAsync(Function<ItemsTask.ItemsResponse, Unit> { res -> response(session, res) }, executor)
                     .exceptionally { e ->
-                        log.error("Error in items", e)
-                        sendError(session, e)
-                        session.destroy()
-                    }
+                        log.error("Error in item $session", e.cause)
+                        sendError(session, e.cause ?: e)
+                    }.thenApply { session.removeTask(task) }
         }
     }
 
     /**
-     * 3. Send onItems responses
+     * 3. Send response responses
      */
-    private fun onItems(session: Session, items: ItemsTask.ItemsResponse) {
-        log.debug("Items Response")
+    private fun response(session: Session, items: ItemsTask.ItemsResponse) {
+        log.debug("Items Response $session")
         items.items.filterNotNull().forEach { item ->
             sendItem(session, item)
         }
@@ -89,7 +100,7 @@ class BusinessLogic(
     }
 
     private fun sendItem(session: Session, item: Any) {
-        log.debug("Sent Item")
+        log.debug("Sent Item to $session")
         session.session.sendMessage(TextMessage(Gson().toJson(item)))
     }
 
@@ -97,9 +108,15 @@ class BusinessLogic(
      * Try to send all available params from session
      */
     private fun sendError(session: Session, e: Throwable) {
-        log.debug("Send Error")
-        val response = session.getAllowedParams().filterKeys { config.fields.faulty.contains(it) }
-                .plus("error" to e.message)
+        log.debug("Send Error to $session")
+        val response = if (e is AggregatorException) {
+            session.params.filterKeys { config.fields.faulty.contains(it) }
+                    .plus("error" to e.message)
+        } else {
+            log.error("Unknown exception", e)
+            session.params.filterKeys { config.fields.faulty.contains(it) }
+                    .plus("error" to UnrecognizedException().message)
+        }
         session.session.sendMessage(TextMessage(Gson().toJson(response)))
     }
 }

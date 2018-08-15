@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory
 
 class ItemsTask(
         private val config: Config,
-        private val request: ItemsRequest) :
-        ScriptTask<ItemsTask.ItemsRequest, ItemsTask.ItemsResponse>(request) {
+        private val request: Any) :
+        ScriptTask<Any, ItemsTask.ItemsResponse>(request) {
     private val log = LoggerFactory.getLogger(ItemsTask::class.java)
 
     override fun getScript(): List<String> = config.script.items.split(" ")
@@ -21,24 +21,29 @@ class ItemsTask(
 
             throw ItemsJsonException()
         }
-        return if (json.containsKey(config.fields.items) && json[config.fields.items] is List<*>) {
-            if (json.containsKey(config.fields.suppliers) && json[config.fields.suppliers] is List<*>) {
-                ItemsResponse(
-                        json[config.fields.suppliers] as List<*>,
-                        json[config.fields.suppliers] as List<*>)
+        return try {
+            if (json.containsKey(config.fields.items) && json[config.fields.items] is List<*>) {
+                if (json.containsKey(config.fields.suppliers) && json[config.fields.suppliers] is List<*>) {
+                    ItemsResponse(
+                            json[config.fields.items] as List<*>,
+                            json[config.fields.suppliers] as List<*>)
+                } else {
+                    ItemsResponse(
+                            json[config.fields.items] as List<*>)
+                }
             } else {
-                ItemsResponse(
-                        json[config.fields.suppliers] as List<*>)
+                log.error("Incorrect format $this: $input")
+
+                throw ItemsResponseException()
             }
-        } else {
+        } catch (e: Exception) {
             log.error("Incorrect format $this: $input")
 
             throw ItemsResponseException()
         }
     }
 
-    class ItemsRequest(params: Any) : Request
-    class ItemsResponse(val items: List<*>, val suppliers: List<*> = emptyList<Any>()) : Response
+    class ItemsResponse(val items: List<*>, val suppliers: List<*> = emptyList<Any>())
 
     override fun toString(): String = "Suppliers Task: $state $request"
 }

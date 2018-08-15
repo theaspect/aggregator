@@ -11,6 +11,7 @@ import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 class Session(
         val config: Config,
@@ -22,15 +23,23 @@ class Session(
     // TODO We should somehow remove finished tasks
     private val tasks: MutableList<ScriptTask<*, *>> = Collections.synchronizedList(mutableListOf())
 
-    fun getAllowedParams(): Map<String, String> {
+    val params: Map<String, String>
+    val completableFuture = CompletableFuture<Boolean>()
+
+    init {
+        this.params = getAllowedParams()
+    }
+
+    private fun getAllowedParams(): Map<String, String> {
         val request: Map<String, String> = try {
             Gson().fromJson(message.payload)
         } catch (e: Exception) {
-            log.error("Can't parse session params", e)
+            log.error("Can't parse params in $session", e)
             throw RequestJsonException(e)
         }
 
         if (!request.keys.containsAll(config.fields.request)) {
+            log.error("Missed required params $session")
             throw IllegalRequestException()
         }
 
@@ -49,6 +58,8 @@ class Session(
         isDestroyed = true
         session.close(CloseStatus.NORMAL)
         tasks.forEach { it.cancel() }
+
+        completableFuture.complete(false)
     }
 
     @Synchronized
@@ -63,7 +74,18 @@ class Session(
         this.tasks.addAll(task)
     }
 
+    @Synchronized
+    fun removeTask(task: ScriptTask<*, *>) {
+        log.debug("Remove $task in $this")
+        tasks.remove(task)
+
+        if (tasks.isEmpty()) {
+            log.debug("No mere tasks in $this, closing")
+            completableFuture.complete(true)
+        }
+    }
+
     override fun toString(): String {
-        return "Session#${session.id} tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed"
+        return "Session#${session.id} params: $params tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed"
     }
 }

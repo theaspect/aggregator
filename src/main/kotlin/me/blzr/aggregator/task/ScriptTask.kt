@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
-abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(private val request: REQ) {
+abstract class ScriptTask<REQ, RES>(private val request: REQ) {
     private val log = LoggerFactory.getLogger(ScriptTask::class.java)
 
     private var process: Process? = null
@@ -31,10 +31,10 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
 
     fun execute(): Supplier<RES> {
         if (changeState(State.RUNNING) { it == State.PENDING }) {
-            log.debug("Schedule new task")
+            log.debug("Schedule $this")
             return Supplier {
                 val script = getScript()
-                log.debug("Execute task $this")
+                log.debug("Execute $this")
                 val ps = try {
                     ProcessBuilder(script).start()
                 } catch (e: Exception) {
@@ -54,8 +54,12 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
                 // It's safe because watchdog will kill this process eventually
                 val exitCode = ps.waitFor()
                 if (exitCode > 0) {
-                    val stderr = ps.errorStream.bufferedReader().readText()
-                    log.debug("Output from script $stderr")
+                    try {
+                        val stderr = ps.errorStream.bufferedReader().readText()
+                        log.debug("Output from script:\n$stderr")
+                    } catch (e: Exception) {
+                        log.error("Can't read stderr from script", e)
+                    }
                     throw ScriptErrorException()
                 }
 
@@ -70,7 +74,7 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
     }
 
     fun cancel() {
-        log.debug("Cancel task")
+        log.debug("Cancel $this")
         changeState(State.DESTROYED)
         process?.destroy() // SIGTERM(15)
         process?.waitFor(1, TimeUnit.SECONDS)
@@ -81,8 +85,4 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
     enum class State {
         PENDING, RUNNING, FINISHED, DESTROYED
     }
-
-    interface Request
-
-    interface Response
 }

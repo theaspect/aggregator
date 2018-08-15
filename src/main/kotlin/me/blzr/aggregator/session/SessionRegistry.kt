@@ -32,8 +32,7 @@ class SessionRegistry(
     }
 
     // TODO wrap into stream
-    fun getSession(): Session =
-            sessions.take()
+    fun awaitSession(): Session = sessions.take()
 
     private fun sameWebSocketSession(session: Session) =
             sessions.any { it.session == session.session }
