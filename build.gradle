@@ -20,6 +20,10 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
+// Used for config parsing
+// https://kotlinlang.org/docs/reference/kapt.html
+apply plugin: 'kotlin-kapt'
+
 junitPlatform {
     filters {
         engines {
@@ -76,4 +80,6 @@ dependencies {
     // Mocks
     // see https://mockk.io
     testImplementation "io.mockk:mockk:1.8.6"
+
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }

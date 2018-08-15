@@ -1,6 +1,7 @@
 package me.blzr.aggregator.session
 
 import com.google.gson.Gson
+import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.IllegalRequestException
 import me.blzr.aggregator.exception.RequestJsonException
 import me.blzr.aggregator.fromJson
@@ -12,6 +13,7 @@ import org.springframework.web.socket.WebSocketSession
 import java.util.*
 
 class Session(
+        val config: Config,
         val session: WebSocketSession,
         val message: TextMessage) {
     private val log = LoggerFactory.getLogger(Session::class.java)
@@ -27,7 +29,7 @@ class Session(
             throw RequestJsonException(e)
         }
 
-        if (!request.keys.containsAll(ALLOWED_LIST)) {
+        if (!request.keys.containsAll(config.fields.request)) {
             throw IllegalRequestException()
         }
 
@@ -58,10 +60,5 @@ class Session(
         }
 
         this.tasks.addAll(task)
-    }
-
-    companion object {
-        // TODO extract config
-        val ALLOWED_LIST = listOf("code", "brand", "apikey", "analog")
     }
 }

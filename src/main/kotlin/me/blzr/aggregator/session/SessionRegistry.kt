@@ -1,5 +1,6 @@
 package me.blzr.aggregator.session
 
+import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.SessionReusedException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -8,9 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 @Component
-class SessionRegistry {
+class SessionRegistry(
+        val config: Config) {
     private val log = LoggerFactory.getLogger(SessionRegistry::class.java)
-    private val watchdog = Executors.newScheduledThreadPool(WATCHDOG_POOL)
+    private val watchdog = Executors.newScheduledThreadPool(config.pool.watchdog)
     // Primary queue of new sessions
     private val sessions = LinkedBlockingQueue<Session>()
 
@@ -25,7 +27,7 @@ class SessionRegistry {
                 log.info("Session timeout")
                 session.destroy()
             }
-        }, TIMEOUT, TimeUnit.SECONDS)
+        }, config.timeout.session, TimeUnit.SECONDS)
     }
 
     // TODO wrap into stream
@@ -34,9 +36,4 @@ class SessionRegistry {
 
     private fun sameWebSocketSession(session: Session) =
             sessions.any { it.session == session.session }
-
-    companion object {
-        const val WATCHDOG_POOL = 5
-        const val TIMEOUT = 300L // FIXME for debug purposes
-    }
 }

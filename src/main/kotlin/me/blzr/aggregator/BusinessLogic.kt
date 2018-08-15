@@ -16,6 +16,7 @@ import java.util.function.Function
 
 @Component
 class BusinessLogic(
+        val config: Config,
         val sessionRegistry: SessionRegistry,
         val scriptQueue: ScriptQueue) {
     private final val log = LoggerFactory.getLogger(BusinessLogic::class.java)
@@ -31,7 +32,7 @@ class BusinessLogic(
 
     // Should we create two queues
     fun newSession(session: WebSocketSession, message: TextMessage) {
-        sessionRegistry.addSession(Session(session, message))
+        sessionRegistry.addSession(Session(config, session, message))
     }
 
     fun closeSession(session: WebSocketSession, status: CloseStatus) {
@@ -95,13 +96,8 @@ class BusinessLogic(
      */
     private fun sendError(session: Session, e: Throwable) {
         log.info("Send Error")
-        val response = session.getAllowedParams().filterKeys { FAULTY.contains(it) }
+        val response = session.getAllowedParams().filterKeys { config.fields.faulty.contains(it) }
                 .plus("error" to e.message)
         session.session.sendMessage(TextMessage(Gson().toJson(response)))
-    }
-
-    companion object {
-        // TODO configure
-        val FAULTY = listOf("code", "brand", "analog")
     }
 }
