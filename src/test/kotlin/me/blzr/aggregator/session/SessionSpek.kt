@@ -2,6 +2,7 @@ package me.blzr.aggregator.session
 
 import com.google.gson.Gson
 import io.mockk.mockk
+import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.IllegalRequestException
 import me.blzr.aggregator.exception.RequestJsonException
 import org.jetbrains.spek.api.Spek
@@ -14,9 +15,10 @@ import kotlin.test.assertFailsWith
 
 object SessionSpek : Spek({
     describe("A Session") {
+        val config = Config()
 
         on("incorrect json") {
-            val session = Session(mockk(), TextMessage("foo bar"))
+            val session = Session(config, mockk(), TextMessage("foo bar"))
             it("should fail") {
                 assertFailsWith<RequestJsonException> {
                     session.getAllowedParams()
@@ -25,7 +27,7 @@ object SessionSpek : Spek({
         }
 
         on("missing param") {
-            val session = Session(mockk(), TextMessage(Gson().toJson(mapOf(
+            val session = Session(config, mockk(), TextMessage(Gson().toJson(mapOf(
                     "code" to "",
                     "brand" to "",
                     "apikey" to ""
@@ -44,7 +46,7 @@ object SessionSpek : Spek({
                     "apikey" to "3",
                     "analog" to "4"
             )
-            val session = Session(mockk(), TextMessage(Gson().toJson(params)))
+            val session = Session(config, mockk(), TextMessage(Gson().toJson(params)))
             it("should succeed") {
                 assertEquals(params, session.getAllowedParams())
             }

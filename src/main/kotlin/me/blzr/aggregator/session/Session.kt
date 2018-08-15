@@ -26,6 +26,7 @@ class Session(
         val request: Map<String, String> = try {
             Gson().fromJson(message.payload)
         } catch (e: Exception) {
+            log.error("Can't parse session params", e)
             throw RequestJsonException(e)
         }
 
@@ -40,11 +41,11 @@ class Session(
     fun isOpen() = session.isOpen
 
     @Synchronized
-    fun isAlive() = isOpen() && !isDestroyed
+    private fun isAlive() = isOpen() && !isDestroyed
 
     @Synchronized
     fun destroy() {
-        log.info("Destroy session")
+        log.debug("Destroy $this")
         isDestroyed = true
         session.close(CloseStatus.NORMAL)
         tasks.forEach { it.cancel() }
@@ -52,7 +53,7 @@ class Session(
 
     @Synchronized
     fun addTask(vararg task: ScriptTask<*, *>) {
-        log.info("Register task in session")
+        log.debug("Register task in $this")
 
         if (!isAlive()) {
             // No need to execute already closed or time out sessions
@@ -60,5 +61,9 @@ class Session(
         }
 
         this.tasks.addAll(task)
+    }
+
+    override fun toString(): String {
+        return "Session#${session.id} tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed"
     }
 }

@@ -1,4 +1,4 @@
-package me.blzr.aggregator
+package me.blzr.aggregator.controller
 
 import com.google.gson.Gson
 import org.slf4j.LoggerFactory

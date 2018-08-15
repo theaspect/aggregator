@@ -1,5 +1,6 @@
-package me.blzr.aggregator
+package me.blzr.aggregator.controller
 
+import me.blzr.aggregator.BusinessLogic
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.web.socket.CloseStatus
@@ -13,7 +14,7 @@ class WebSocketHandler(
     private final val log = LoggerFactory.getLogger(WebSocketHandler::class.java)
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
-        log.info("New session ${session.id}")
+        log.debug("New session ${session.id}")
         businessLogic.newSession(session, message)
     }
 

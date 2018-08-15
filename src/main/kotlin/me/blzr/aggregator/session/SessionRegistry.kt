@@ -17,14 +17,15 @@ class SessionRegistry(
     private val sessions = LinkedBlockingQueue<Session>()
 
     fun addSession(session: Session) {
-        log.info("Register new session")
+        log.debug("New $session")
         if(sameWebSocketSession(session)){
+            log.error("Reused $session")
             throw SessionReusedException()
         }
         sessions.offer(session)
         watchdog.schedule({
             if (session.isOpen()) {
-                log.info("Session timeout")
+                log.debug("Timeout $session")
                 session.destroy()
             }
         }, config.timeout.session, TimeUnit.SECONDS)

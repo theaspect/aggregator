@@ -27,7 +27,7 @@ class ScriptQueue {
 
         watchdog.schedule({
             if (!cFuture.isDone) {
-                log.info("Task timeout")
+                log.debug("Task timeout")
                 cFuture.completeExceptionally(SessionTimeoutException())
                 script.cancel()
                 future.cancel(true)

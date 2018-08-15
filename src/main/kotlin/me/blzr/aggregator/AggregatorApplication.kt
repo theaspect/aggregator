@@ -1,5 +1,7 @@
 package me.blzr.aggregator
 
+import me.blzr.aggregator.controller.EchoWebSocketHandler
+import me.blzr.aggregator.controller.WebSocketHandler
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Configuration

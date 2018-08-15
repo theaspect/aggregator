@@ -1,35 +1,44 @@
 package me.blzr.aggregator.task
 
 import com.google.gson.Gson
+import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.ItemsJsonException
+import me.blzr.aggregator.exception.ItemsResponseException
+import org.slf4j.LoggerFactory
 
-class ItemsTask(request: ItemsRequest) :
+class ItemsTask(
+        private val config: Config,
+        private val request: ItemsRequest) :
         ScriptTask<ItemsTask.ItemsRequest, ItemsTask.ItemsResponse>(request) {
+    private val log = LoggerFactory.getLogger(ItemsTask::class.java)
 
-    override fun getScript(): List<String> = ITEMS_SCRIPT
+    override fun getScript(): List<String> = config.script.items.split(" ")
     override fun parse(input: String): ItemsResponse {
-        val json = Gson().fromJson(input, Map::class.java)
-        return if (json.containsKey(ItemsTask.ITEMS_FIELD) && json[ItemsTask.ITEMS_FIELD] is List<*>) {
-            if (json.containsKey(ItemsTask.SUPPLIERS_FIELD) && json[ItemsTask.SUPPLIERS_FIELD] is List<*>) {
+        val json = try {
+            Gson().fromJson(input, Map::class.java)
+        } catch (e: Exception) {
+            log.error("Can't parse response $this: $input")
+
+            throw ItemsJsonException()
+        }
+        return if (json.containsKey(config.fields.items) && json[config.fields.items] is List<*>) {
+            if (json.containsKey(config.fields.suppliers) && json[config.fields.suppliers] is List<*>) {
                 ItemsResponse(
-                        json[ItemsTask.SUPPLIERS_FIELD] as List<*>,
-                        json[ItemsTask.ITEMS_FIELD] as List<*>)
+                        json[config.fields.suppliers] as List<*>,
+                        json[config.fields.suppliers] as List<*>)
             } else {
                 ItemsResponse(
-                        json[ItemsTask.SUPPLIERS_FIELD] as List<*>)
+                        json[config.fields.suppliers] as List<*>)
             }
         } else {
-            throw ItemsJsonException()
+            log.error("Incorrect format $this: $input")
+
+            throw ItemsResponseException()
         }
     }
 
     class ItemsRequest(params: Any) : Request
     class ItemsResponse(val items: List<*>, val suppliers: List<*> = emptyList<Any>()) : Response
 
-    companion object {
-        const val PATH = "/Users/theaspect/Workspace/aggregator/script"
-        const val SUPPLIERS_FIELD = "suppliers"
-        const val ITEMS_FIELD = "items"
-        val ITEMS_SCRIPT = listOf("/usr/bin/php", "-d", "display_errors=on", "$PATH/items.php")
-    }
+    override fun toString(): String = "Suppliers Task: $state $request"
 }
