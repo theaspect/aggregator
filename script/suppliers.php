@@ -2,10 +2,15 @@
 
 //Читаем строку потока
 if($stdin_line = fgets(STDIN)) {
+    error_log($stdin_line);
     $arOutput = json_decode($stdin_line, TRUE);
 
+    $code = $arOutput["params"]["code"];
+    error_log("Code: " . $code);
+
     //  echo '{"code": "normal","brand": "foo","apikey": "bar","analog": "baz"}' | php script/suppliers.php
-    if($arOutput["code"] == "normal"){
+    if($code == "normal"){
+        error_log("Normal");
         $res = json_encode(
             Array(
                 "suppliers"=> Array(
@@ -43,7 +48,8 @@ if($stdin_line = fgets(STDIN)) {
             )
         );
         fwrite(STDOUT, $res);
-    }else{
+    } else {
+        error_log("Unrecognized");
         exit(-1);
     }
 }

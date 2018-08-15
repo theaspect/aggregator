@@ -32,8 +32,9 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
         if (changeState(State.RUNNING) { it == State.PENDING }) {
             log.info("Schedule new task")
             return Supplier {
-                log.info("Execute task")
-                val ps = ProcessBuilder(getScript()).start()
+                val script = getScript()
+                log.info("Execute task $this")
+                val ps = ProcessBuilder(script).start()
                 this.process = ps // Cache process value to be managed externally
 
                 ps.outputStream.bufferedWriter().use {
@@ -53,6 +54,7 @@ abstract class ScriptTask<REQ : ScriptTask.Request, RES : ScriptTask.Response>(p
                 }
 
                 changeState(State.FINISHED) { it == State.RUNNING }
+                log.info("Task finished $this")
                 return@Supplier parse(response)
             }
         } else {

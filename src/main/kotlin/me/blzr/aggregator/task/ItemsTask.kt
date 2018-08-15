@@ -30,6 +30,6 @@ class ItemsTask(request: ItemsRequest) :
         const val PATH = "/Users/theaspect/Workspace/aggregator/script"
         const val SUPPLIERS_FIELD = "suppliers"
         const val ITEMS_FIELD = "items"
-        val ITEMS_SCRIPT = listOf("/usr/bin/php", "$PATH/items.php")
+        val ITEMS_SCRIPT = listOf("/usr/bin/php", "-d", "display_errors=on", "$PATH/items.php")
     }
 }
