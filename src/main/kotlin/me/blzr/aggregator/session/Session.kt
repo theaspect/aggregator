@@ -19,8 +19,7 @@ class Session(
         val message: TextMessage) {
     private val log = LoggerFactory.getLogger(Session::class.java)
 
-    private var isDestroyed = true
-    // TODO We should somehow remove finished tasks
+    private var isDestroyed = false
     private val tasks: MutableList<ScriptTask<*, *>> = Collections.synchronizedList(mutableListOf())
 
     val params: Map<String, String>
@@ -31,47 +30,61 @@ class Session(
     }
 
     private fun getAllowedParams(): Map<String, String> {
-        val request: Map<String, String> = try {
-            Gson().fromJson(message.payload)
+        return try {
+            val request: Map<String, String> = Gson().fromJson(message.payload)
+
+            if (!request.keys.containsAll(config.fields.request)) {
+                log.error("Missed required params $session")
+                fail(IllegalRequestException())
+            }
+
+            request
         } catch (e: Exception) {
-            log.error("Can't parse params in $session", e)
-            throw RequestJsonException(e)
+            // No need to print whole stack trace
+            log.error("Can't parse params in $session: ${e.message}")
+            fail(RequestJsonException(e))
+            mapOf()
         }
-
-        if (!request.keys.containsAll(config.fields.request)) {
-            log.error("Missed required params $session")
-            throw IllegalRequestException()
-        }
-
-        return request
     }
 
     @Synchronized
     fun isOpen() = session.isOpen
 
     @Synchronized
-    private fun isAlive() = isOpen() && !isDestroyed
+    fun isAlive() = isOpen() && !isDestroyed
 
     @Synchronized
-    fun destroy() {
-        log.debug("Destroy $this")
-        isDestroyed = true
-        session.close(CloseStatus.NORMAL)
-        tasks.forEach { it.cancel() }
+    fun fail(e: Throwable) {
+        if (isDestroyed && tasks.isEmpty()) {
+            // No need to do anything if we receive event from web socket
+            return
+        }
 
-        completableFuture.complete(false)
+        log.debug("Fail $this")
+        isDestroyed = true
+
+        tasks.removeAll { task ->
+            task.cancel()
+            return@removeAll true
+        }
+
+        completableFuture.completeExceptionally(e)
+    }
+
+    @Synchronized
+    private fun complete(done: Boolean) {
+        completableFuture.complete(done)
     }
 
     @Synchronized
     fun addTask(vararg task: ScriptTask<*, *>) {
         log.debug("Register task in $this")
 
-        if (!isAlive()) {
-            // No need to execute already closed or time out sessions
-            tasks.forEach { it.cancel() }
+        if (isAlive()) {
+            this.tasks.addAll(task)
+        } else {
+            log.debug("Skip register task in dead session $this")
         }
-
-        this.tasks.addAll(task)
     }
 
     @Synchronized
@@ -80,12 +93,29 @@ class Session(
         tasks.remove(task)
 
         if (tasks.isEmpty()) {
-            log.debug("No mere tasks in $this, closing")
-            completableFuture.complete(true)
+            log.info("No more tasks in $this, closing")
+            complete(true)
         }
     }
 
     override fun toString(): String {
         return "Session#${session.id} params: $params tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed"
+    }
+
+    fun sendMessage(item: Any) {
+        val json = Gson().toJson(item)
+        if (session.isOpen) {
+            session.sendMessage(TextMessage(json))
+        } else {
+            log.warn("Can't send response to closed session $this: $json")
+        }
+    }
+
+    fun close(normal: Boolean) {
+        if (normal) {
+            session.close(CloseStatus.NORMAL)
+        } else {
+            session.close(CloseStatus.SERVER_ERROR)
+        }
     }
 }

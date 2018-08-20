@@ -24,6 +24,9 @@ class WebSocketConfig(
     }
 }
 
+/**
+ * Run with -Xms32m -Xmx32m -Xss1m
+ */
 fun main(args: Array<String>) {
     runApplication<AggregatorApplication>(*args)
 }

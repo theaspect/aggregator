@@ -1,7 +1,8 @@
 package me.blzr.aggregator.task
 
 import me.blzr.aggregator.Config
-import me.blzr.aggregator.exception.SessionTimeoutException
+import me.blzr.aggregator.NamedThread
+import me.blzr.aggregator.exception.ScriptTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
@@ -13,8 +14,8 @@ class ScriptQueue(
         private val config: Config) {
     private val log = LoggerFactory.getLogger(ScriptQueue::class.java)
     // TODO For java 9 it will be native
-    private val watchdog = Executors.newScheduledThreadPool(config.pool.watchdog)
-    private val executor = Executors.newFixedThreadPool(config.pool.executor)
+    private val watchdog = Executors.newScheduledThreadPool(config.pool.watchdog, NamedThread("script-watchdog"))
+    private val executor = Executors.newFixedThreadPool(config.pool.executor, NamedThread("script-pool"))
 
     fun <REQ, RES> addTask(script: ScriptTask<REQ, RES>): CompletableFuture<RES> {
         log.debug("Add $script")
@@ -32,7 +33,7 @@ class ScriptQueue(
         watchdog.schedule({
             if (!cFuture.isDone) {
                 log.warn("Timeout $script")
-                cFuture.completeExceptionally(SessionTimeoutException())
+                cFuture.completeExceptionally(ScriptTimeoutException())
                 script.cancel()
                 future.cancel(true)
             }

@@ -42,6 +42,66 @@
             submit('ws', data, 'response-normal');
         }
 
+        function badJson() {
+            submit('ws', "Not a JSON", 'response-badJson');
+        }
+
+        function missedFields() {
+            const data = JSON.stringify({
+                "code": "normal",
+                "brand": "foo",
+                // Missed Field
+                // "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-missedFields');
+        }
+
+        function suppliersTimeout(){
+            const data = JSON.stringify({
+                "code": "suppliersTimeout",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-suppliersTimeout');
+        }
+
+        function suppliersError(){
+            const data = JSON.stringify({
+                "code": "suppliersError",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-suppliersError');
+        }
+
+        function suppliersNotJson(){
+            const data = JSON.stringify({
+                "code": "suppliersNotJson",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-suppliersNotJson');
+        }
+
+        function suppliersBadResponse(){
+            const data = JSON.stringify({
+                "code": "suppliersBadResponse",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-suppliersBadResponse');
+        }
+
     </script>
 </head>
 <body>
@@ -52,10 +112,42 @@
     <button onclick="echo()" name="submit">Send Echo Request</button>
     <div id="response-echo"></div>
 </div>
+<h1> Request </h1>
 <div>
-    <h1>Normal request</h1>
+    <h2>Normal request</h2>
     <button onclick="normal()" name="submit">Send Normal Request</button>
     <div id="response-normal"></div>
+</div>
+<div>
+    <h2>Bad json</h2>
+    <button onclick="badJson()" name="submit">Send Bad Json</button>
+    <div id="response-badJson"></div>
+</div>
+<div>
+    <h2>Missed Field</h2>
+    <button onclick="missedFields()" name="submit">Send Json with missed field</button>
+    <div id="response-missedFields"></div>
+</div>
+<h1>Suppliers</h1>
+<div>
+    <h2>Suppliers Timeout</h2>
+    <button onclick="suppliersTimeout()" name="submit">Fail with timeout on suppliers</button>
+    <div id="response-suppliersTimeout"></div>
+</div>
+<div>
+    <h2>Suppliers Error</h2>
+    <button onclick="suppliersError()" name="submit">Fail with non zero exit code on suppliers</button>
+    <div id="response-suppliersError"></div>
+</div>
+<div>
+    <h2>Suppliers Not a JSON</h2>
+    <button onclick="suppliersNotJson()" name="submit">Suppliers return not a json</button>
+    <div id="response-suppliersNotJson"></div>
+</div>
+<div>
+    <h2>Suppliers Bad Response</h2>
+    <button onclick="suppliersBadResponse()" name="submit">Suppliers return bad response</button>
+    <div id="response-suppliersBadResponse"></div>
 </div>
 </body>
 </html>
