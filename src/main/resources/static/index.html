@@ -20,6 +20,7 @@
             };
             socket.onmessage = (data) => document.getElementById(response).innerHTML += "<br/>" + data.data;
             socket.onclose = ev => document.getElementById(response).innerHTML += "<br/>" + ev.type;
+            return socket
         }
 
         function echo() {
@@ -42,6 +43,17 @@
             submit('ws', data, 'response-normal');
         }
 
+        function analog() {
+            const data = JSON.stringify({
+                "code": "analog",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-analog');
+        }
+
         function badJson() {
             submit('ws', "Not a JSON", 'response-badJson');
         }
@@ -56,6 +68,29 @@
             });
 
             submit('ws', data, 'response-missedFields');
+        }
+
+        function immediatelyClose() {
+            const data = JSON.stringify({
+                "code": "normal",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            const ws = submit('ws', data, 'response-immediatelyClose');
+            setTimeout(() => ws.close(1000), 10);
+        }
+
+        function emptySuppliers() {
+            const data = JSON.stringify({
+                "code": "emptySuppliers",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-emptySuppliers');
         }
 
         function suppliersTimeout(){
@@ -102,6 +137,39 @@
             submit('ws', data, 'response-suppliersBadResponse');
         }
 
+        function emptyItems(){
+            const data = JSON.stringify({
+                "code": "emptyItems",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-emptyItems');
+        }
+
+        function itemsTimeout(){
+            const data = JSON.stringify({
+                "code": "itemsTimeout",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-itemsTimeout');
+        }
+
+        function sessionTimeout(){
+            const data = JSON.stringify({
+                "code": "sessionTimeout",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-sessionTimeout');
+        }
+
     </script>
 </head>
 <body>
@@ -112,42 +180,82 @@
     <button onclick="echo()" name="submit">Send Echo Request</button>
     <div id="response-echo"></div>
 </div>
-<h1> Request </h1>
 <div>
-    <h2>Normal request</h2>
-    <button onclick="normal()" name="submit">Send Normal Request</button>
-    <div id="response-normal"></div>
+    <h1>Request</h1>
+    <div>
+        <h2>Normal request</h2>
+        <button onclick="normal()" name="submit">Send Normal Request</button>
+        <div id="response-normal"></div>
+    </div>
+    <div>
+        <h2>Normal request with analogs</h2>
+        <button onclick="analog()" name="submit">Send Normal Request with analogs</button>
+        <div id="response-analog"></div>
+    </div>
+    <div>
+        <h2>Bad json</h2>
+        <button onclick="badJson()" name="submit">Send Bad Json</button>
+        <div id="response-badJson"></div>
+    </div>
+    <div>
+        <h2>Missed Field</h2>
+        <button onclick="missedFields()" name="submit">Send Json with missed field</button>
+        <div id="response-missedFields"></div>
+    </div>
+    <div>
+        <h2>Immediately close session</h2>
+        <button onclick="immediatelyClose()" name="submit">Send Json and immediately close session</button>
+        <div id="response-immediatelyClose"></div>
+    </div>
 </div>
+
 <div>
-    <h2>Bad json</h2>
-    <button onclick="badJson()" name="submit">Send Bad Json</button>
-    <div id="response-badJson"></div>
+    <h1>Supplier errors</h1>
+    <div>
+        <h2>Empty Suppliers</h2>
+        <button onclick="emptySuppliers()" name="submit">No available suppliers</button>
+        <div id="response-emptySuppliers"></div>
+    </div>
+    <div>
+        <h2>Suppliers Timeout</h2>
+        <button onclick="suppliersTimeout()" name="submit">Fail with timeout on suppliers</button>
+        <div id="response-suppliersTimeout"></div>
+    </div>
+    <div>
+        <h2>Suppliers Error</h2>
+        <button onclick="suppliersError()" name="submit">Fail with non zero exit code on suppliers</button>
+        <div id="response-suppliersError"></div>
+    </div>
+    <div>
+        <h2>Suppliers Not a JSON</h2>
+        <button onclick="suppliersNotJson()" name="submit">Suppliers return not a json</button>
+        <div id="response-suppliersNotJson"></div>
+    </div>
+    <div>
+        <h2>Suppliers Bad Response</h2>
+        <button onclick="suppliersBadResponse()" name="submit">Suppliers return bad response</button>
+        <div id="response-suppliersBadResponse"></div>
+    </div>
 </div>
+
 <div>
-    <h2>Missed Field</h2>
-    <button onclick="missedFields()" name="submit">Send Json with missed field</button>
-    <div id="response-missedFields"></div>
+    <h1>Item errors</h1>
+    <div>
+        <h2>Empty Items</h2>
+        <button onclick="emptyItems()" name="submit">No available items</button>
+        <div id="response-emptyItems"></div>
+    </div>
+    <div>
+        <h2>Items Timeout</h2>
+        <button onclick="itemsTimeout()" name="submit">Timeout on items script</button>
+        <div id="response-itemsTimeout"></div>
+    </div>
+    <div>
+        <h2>Session Timeout</h2>
+        <button onclick="sessionTimeout()" name="submit">Too many suppliers</button>
+        <div id="response-sessionTimeout"></div>
+    </div>
 </div>
-<h1>Suppliers</h1>
-<div>
-    <h2>Suppliers Timeout</h2>
-    <button onclick="suppliersTimeout()" name="submit">Fail with timeout on suppliers</button>
-    <div id="response-suppliersTimeout"></div>
-</div>
-<div>
-    <h2>Suppliers Error</h2>
-    <button onclick="suppliersError()" name="submit">Fail with non zero exit code on suppliers</button>
-    <div id="response-suppliersError"></div>
-</div>
-<div>
-    <h2>Suppliers Not a JSON</h2>
-    <button onclick="suppliersNotJson()" name="submit">Suppliers return not a json</button>
-    <div id="response-suppliersNotJson"></div>
-</div>
-<div>
-    <h2>Suppliers Bad Response</h2>
-    <button onclick="suppliersBadResponse()" name="submit">Suppliers return bad response</button>
-    <div id="response-suppliersBadResponse"></div>
-</div>
+
 </body>
 </html>

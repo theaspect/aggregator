@@ -52,6 +52,50 @@ if($stdin_line = fgets(STDIN)) {
                 )
             )
         );
+    } else if($code == "analog"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "normal-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "normal-2",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234",
+                            "domain"=> "msk"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "analog-3",
+                        "params"=> Array(
+                            "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    )
+                )
+            )
+        );
+    } else if($code == "emptySuppliers"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                )
+            )
+        );
     } else if($code == "suppliersTimeout"){
         sleep(60); // More the single script allowed
     } else if($code == "suppliersError"){
@@ -77,7 +121,115 @@ if($stdin_line = fgets(STDIN)) {
                 )
             )
        );
+    } else if($code == "emptyItems"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "empty-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "empty-2",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234",
+                            "domain"=> "msk"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "empty-3",
+                        "params"=> Array(
+                            "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    )
+                )
+            )
+        );
+    } else if($code == "itemsTimeout"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "timeout-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "timeout-2",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234",
+                            "domain"=> "msk"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "timeout-3",
+                        "params"=> Array(
+                            "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    )
+                )
+            )
+        );
+    } else if($code == "sessionTimeout"){
+        $arr = Array(
+                   Array(
+                       "class"=> "normal-1",
+                       "params"=> Array(
+                           "login"=> "log1234",
+                           "password"=> "1234"
+                       ),
+                       "code"=> "3310",
+                       "brand"=> "ctr",
+                       "analog"=> "1"
+                   )
+               );
+        // Spam with number of suppliers >> pool size (20)
+        for ($i = 1; $i <= 2000; $i++) {
+            array_push($arr,
+                Array(
+                    "class"=> "timeout-".$i,
+                    "params"=> Array(
+                        "login"=> "log1234",
+                        "password"=> "1234"
+                    ),
+                    "code"=> "3310",
+                    "brand"=> "ctr",
+                    "analog"=> "1"
+                )
+            );
+        }
+        $res = json_encode(
+                    Array(
+                        "suppliers"=>$arr
+                    )
+                );
     } else {
+        error_log("Unrecognized Supplier class");
         exit(-1);
     }
 

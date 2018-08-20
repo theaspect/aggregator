@@ -14,14 +14,16 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class Session(
-        val config: Config,
+        private val config: Config,
         val session: WebSocketSession,
-        val message: TextMessage) {
+        private val message: TextMessage) {
     private val log = LoggerFactory.getLogger(Session::class.java)
 
+    private val age = System.currentTimeMillis()
     private var isDestroyed = false
     private val tasks: MutableList<ScriptTask<*, *>> = Collections.synchronizedList(mutableListOf())
 
+    val id = session.id
     val params: Map<String, String>
     val completableFuture = CompletableFuture<Boolean>()
 
@@ -98,10 +100,7 @@ class Session(
         }
     }
 
-    override fun toString(): String {
-        return "Session#${session.id} params: $params tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed"
-    }
-
+    @Synchronized
     fun sendMessage(item: Any) {
         val json = Gson().toJson(item)
         if (session.isOpen) {
@@ -111,11 +110,16 @@ class Session(
         }
     }
 
+    @Synchronized
     fun close(normal: Boolean) {
         if (normal) {
             session.close(CloseStatus.NORMAL)
         } else {
             session.close(CloseStatus.SERVER_ERROR)
         }
+    }
+
+    override fun toString(): String {
+        return "Session#${session.id} params: $params tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed age: ${System.currentTimeMillis() - age}"
     }
 }

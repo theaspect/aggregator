@@ -6,6 +6,7 @@ import me.blzr.aggregator.session.Session
 import me.blzr.aggregator.session.SessionRegistry
 import me.blzr.aggregator.task.ItemsTask
 import me.blzr.aggregator.task.ScriptQueue
+import me.blzr.aggregator.task.ScriptTask
 import me.blzr.aggregator.task.SuppliersTask
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -13,6 +14,7 @@ import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Function
 
 @Component
@@ -22,6 +24,8 @@ class BusinessLogic(
         val scriptQueue: ScriptQueue) {
     private final val log = LoggerFactory.getLogger(BusinessLogic::class.java)
     private final val executor = Executors.newFixedThreadPool(2, NamedThread("business-logic"))
+
+    val taskId = AtomicLong(0)
 
     init {
         executor.submit {
@@ -42,7 +46,7 @@ class BusinessLogic(
                     .exceptionally { e ->
                         log.error("Session completed exceptionally $session", e)
                         // E is j.u.c.CompletionException
-                        sendError(s, e.cause ?: e)
+                        sendError(s, null, e.cause ?: e)
                         s.fail(e)
                         s.close(false)
                     }
@@ -58,7 +62,7 @@ class BusinessLogic(
      */
     private fun suppliers(session: Session) {
         log.debug("Suppliers step $session")
-        val task = SuppliersTask(config, SuppliersTask.SuppliersRequest(session.params))
+        val task = SuppliersTask(taskId.incrementAndGet(), config, SuppliersTask.SuppliersRequest(session.params))
         session.addTask(task)
         scriptQueue
                 .addTask(task)
@@ -66,7 +70,7 @@ class BusinessLogic(
                 .exceptionally { e ->
                     log.error("Error in suppliers $session", e)
                     // E is j.u.c.CompletionException
-                    sendError(session, e.cause ?: e)
+                    sendError(session, null, e.cause ?: e)
                 }.thenApply { session.removeTask(task) }
     }
 
@@ -76,7 +80,7 @@ class BusinessLogic(
     private fun items(session: Session, suppliers: SuppliersTask.SuppliersResponse) {
         log.debug("Items step $session")
         suppliers.items.filterNotNull().forEach { item ->
-            val task = ItemsTask(config, item)
+            val task = ItemsTask(taskId.incrementAndGet(), config, item)
             session.addTask(task)
             scriptQueue
                     .addTask(task)
@@ -84,7 +88,7 @@ class BusinessLogic(
                     .exceptionally { e ->
                         log.error("Error in item $session", e.cause)
                         // E is j.u.c.CompletionException
-                        sendError(session, e.cause ?: e)
+                        sendError(session, task, e.cause ?: e)
                     }.thenApply { session.removeTask(task) }
         }
     }
@@ -110,15 +114,20 @@ class BusinessLogic(
     /**
      * Try to send all available params from session
      */
-    private fun sendError(session: Session, e: Throwable) {
+    private fun sendError(session: Session, task: ScriptTask<*, *>?, e: Throwable) {
         val response = if (e is AggregatorException) {
             session.params.filterKeys { config.fields.faulty.contains(it) }
+                    .plus("session" to session.id)
+                    .plus("task" to (task?.taskId ?: ""))
                     .plus("error" to e.message)
         } else {
             log.error("Unknown exception", e)
             session.params.filterKeys { config.fields.faulty.contains(it) }
+                    .plus("id" to session.id)
+                    .plus("task" to (task?.taskId ?: ""))
                     .plus("error" to UnrecognizedException().message)
         }
+
         log.warn("Send Error to $session: $response")
         session.sendMessage(response)
     }

@@ -1,14 +1,14 @@
 package me.blzr.aggregator.task
 
 import com.google.gson.Gson
+import me.blzr.aggregator.exception.ScriptCancelledException
 import me.blzr.aggregator.exception.ScriptErrorException
 import me.blzr.aggregator.exception.ScriptStartException
-import me.blzr.aggregator.exception.ScriptTimeoutException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.function.Supplier
 
-abstract class ScriptTask<REQ, RES>(private val request: REQ) {
+abstract class ScriptTask<REQ, RES>(val taskId: Long, private val request: REQ) {
     private val log = LoggerFactory.getLogger(ScriptTask::class.java)
 
     private var process: Process? = null
@@ -19,70 +19,91 @@ abstract class ScriptTask<REQ, RES>(private val request: REQ) {
 
     private fun getInput(): String = Gson().toJson(request)
 
-    @Synchronized
-    private fun changeState(target: State, condition: (state: State) -> Boolean = { true }): Boolean {
-        return if (condition(this.state)) {
-            this.state = target
-            true
-        } else {
-            false
-        }
-    }
-
     fun execute(): Supplier<RES> {
-        if (changeState(State.RUNNING) { it == State.PENDING }) {
-            log.debug("Schedule $this")
-            return Supplier {
-                val script = getScript()
-                log.debug("Execute $this")
-                val ps = try {
-                    ProcessBuilder(script).start()
-                } catch (e: Exception) {
-                    log.error("Can't execute script", e)
-                    throw ScriptStartException()
-                }
-                this.process = ps // Cache process value to be managed externally
-
-                ps.outputStream.bufferedWriter().use {
-                    val input = getInput()
-                    it.write(input)
-                    it.close()
-                }
-
-                val response = ps.inputStream.bufferedReader().readText()
-
-                // It's safe because watchdog will kill this process eventually
-                val exitCode = ps.waitFor()
-                if (exitCode > 0) {
-                    // 143 means 15
-                    log.error("Exit code from $this: $exitCode")
-                    try {
-                        val stderr = ps.errorStream.bufferedReader().readText()
-                        log.debug("Output from script:\n$stderr")
-                    } catch (e: Exception) {
-                        // We can't know if stream was closed
-                        log.debug("Can't read stderr from script")
-                    }
-                    throw ScriptErrorException()
-                }
-
-                changeState(State.FINISHED) { it == State.RUNNING }
-                log.debug("Task finished $this")
-                return@Supplier parse(response)
+        // Preserve memory, don't schedule already cancelled tasks
+        synchronized(state) {
+            if (state != State.PENDING) {
+                log.error("Script cancelled $this")
+                throw ScriptCancelledException()
             }
-        } else {
-            log.error("Timeout $this")
-            throw ScriptTimeoutException()
+        }
+
+        log.debug("Schedule $this")
+        return Supplier {
+            val script = getScript()
+            log.debug("Execute $this")
+            val ps = synchronized(state) {
+                log.debug("Locked $this")
+                if (this.state == State.PENDING) {
+                    val ps = try {
+                        ProcessBuilder(script).start()
+                    } catch (e: Exception) {
+                        log.error("Can't execute script", e)
+                        throw ScriptStartException()
+                    }
+
+                    this.state = State.RUNNING
+                    this.process = ps
+
+                    log.debug("Script started $this: ${this.process}")
+                    return@synchronized ps
+                } else {
+                    log.error("Script cancelled $this")
+                    throw ScriptCancelledException()
+                }
+            }
+            log.debug("Unlocked $this")
+
+            ps.outputStream.bufferedWriter().use {
+                val input = getInput()
+                it.write(input)
+                it.close()
+            }
+
+            val response = ps.inputStream.bufferedReader().readText()
+
+            // It's safe because watchdog will kill this process eventually
+            val exitCode = ps.waitFor()
+            if (exitCode > 0) {
+                // 143 means 15
+                log.error("Exit code from $this: $exitCode")
+                try {
+                    val stderr = ps.errorStream.bufferedReader().readText()
+                    log.debug("Output from script:\n$stderr")
+                } catch (e: Exception) {
+                    // We can't know if stream was closed
+                    log.debug("Can't read stderr from script")
+                }
+                throw ScriptErrorException()
+            }
+
+            synchronized(state) {
+                log.debug("Locked $this")
+                if (state == State.RUNNING) {
+                    state = State.FINISHED
+                }
+            }
+
+            log.debug("Task finished $this")
+            return@Supplier parse(response)
         }
     }
 
     fun cancel() {
-        log.debug("Cancel $this")
-        changeState(State.DESTROYED)
-        process?.destroy() // SIGTERM(15)
-        process?.waitFor(1, TimeUnit.SECONDS)
-        process?.destroyForcibly() // SIGKILL(9)
-        process?.waitFor(1, TimeUnit.SECONDS)
+        synchronized(state) {
+            log.debug("Cancel $this")
+            if (process?.isAlive == true) {
+                process?.destroy() // SIGTERM(15)
+                process?.waitFor(1, TimeUnit.SECONDS)
+                process?.destroyForcibly() // SIGKILL(9)
+                process?.waitFor(1, TimeUnit.SECONDS)
+                log.debug("Process $this: ${process?.isAlive}")
+            } else {
+                log.debug("Process already destroyed or not started $this: ${process?.isAlive}")
+            }
+            this.state = State.DESTROYED
+        }
+        log.debug("Unlocked $this")
     }
 
     enum class State {

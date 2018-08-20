@@ -35,7 +35,7 @@ class ScriptQueue(
                 log.warn("Timeout $script")
                 cFuture.completeExceptionally(ScriptTimeoutException())
                 script.cancel()
-                future.cancel(true)
+                future.cancel(false)
             }
         }, config.timeout.script, TimeUnit.SECONDS)
 

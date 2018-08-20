@@ -7,9 +7,10 @@ import me.blzr.aggregator.exception.SuppliersResponseException
 import org.slf4j.LoggerFactory
 
 class SuppliersTask(
+        taskId: Long,
         private val config: Config,
         private val request: SuppliersRequest) :
-        ScriptTask<SuppliersTask.SuppliersRequest, SuppliersTask.SuppliersResponse>(request) {
+        ScriptTask<SuppliersTask.SuppliersRequest, SuppliersTask.SuppliersResponse>(taskId, request) {
     private val log = LoggerFactory.getLogger(SuppliersTask::class.java)
 
     override fun getScript(): List<String> = config.script.suppliers.split(" ")
@@ -39,5 +40,5 @@ class SuppliersTask(
     data class SuppliersRequest(val params: Map<String, String>)
     data class SuppliersResponse(val items: List<*>)
 
-    override fun toString(): String = "Suppliers Task: $state $request"
+    override fun toString(): String = "Suppliers Task#$taskId: $state $request"
 }
