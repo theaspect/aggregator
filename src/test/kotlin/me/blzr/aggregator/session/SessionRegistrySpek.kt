@@ -1,5 +1,6 @@
 package me.blzr.aggregator.session
 
+import io.mockk.every
 import io.mockk.mockk
 import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.SessionReusedException
@@ -14,13 +15,32 @@ import kotlin.test.assertFailsWith
 object SessionRegistrySpek : Spek({
     describe("A Registry with sessions") {
         val config = Config()
+        config.fields.request = listOf("code", "brand", "apikey", "analog")
+
         val sessionRegistry = SessionRegistry(config)
         val ws1 = mockk<WebSocketSession>()
-        val session1 = Session(config, ws1, TextMessage("Foo"))
-        sessionRegistry.addSession(session1)
+        every { ws1.id } returns "1"
+        every { ws1.isOpen } returns true
+
+        val ws2 = mockk<WebSocketSession>()
+        every { ws2.id } returns "1"
+        every { ws2.isOpen } returns true
+
+        val message = TextMessage(
+                """
+                    {
+                        "code": "code",
+                        "brand": "foo",
+                        "apikey": "bar",
+                        "analog": "baz"
+                    }
+                    """.trimIndent())
 
         on("adding duplicate") {
-            val sessionDup = Session(config, ws1, TextMessage("Foo"))
+            val session1 = Session(config, ws1, message)
+            sessionRegistry.addSession(session1)
+
+            val sessionDup = Session(config, ws1, message)
             it("should fail") {
                 assertFailsWith<SessionReusedException> {
                     sessionRegistry.addSession(sessionDup)
@@ -29,8 +49,7 @@ object SessionRegistrySpek : Spek({
         }
 
         on("adding new session") {
-            val ws2 = mockk<WebSocketSession>()
-            val session2 = Session(config, ws2, TextMessage("Bar"))
+            val session2 = Session(config, ws2, message)
             it("should secceed") {
                 sessionRegistry.addSession(session2)
             }

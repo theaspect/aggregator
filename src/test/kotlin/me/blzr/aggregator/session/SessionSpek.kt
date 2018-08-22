@@ -1,6 +1,7 @@
 package me.blzr.aggregator.session
 
 import com.google.gson.Gson
+import io.mockk.every
 import io.mockk.mockk
 import me.blzr.aggregator.Config
 import me.blzr.aggregator.exception.IllegalRequestException
@@ -10,31 +11,46 @@ import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 import org.springframework.web.socket.TextMessage
+import org.springframework.web.socket.WebSocketSession
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.fail
 
 object SessionSpek : Spek({
     describe("A Session") {
         val config = Config()
+        config.fields.request = listOf("code", "brand", "apikey", "analog")
+
+        val ws = mockk<WebSocketSession>()
+        every { ws.id } returns "1"
+        every { ws.isOpen } returns true
 
         on("incorrect json") {
-            val session = Session(config, mockk(), TextMessage("foo bar"))
+            val session = Session(config, ws, TextMessage("foo bar"))
             it("should fail") {
-                assertFailsWith<RequestJsonException> {
-                    session.params
+                assertFalse { session.isAlive() }
+                try{
+                    session.completableFuture.get()
+                    fail("Should throw exception")
+                }catch (e: Exception){
+                    assertEquals(RequestJsonException::class.java, e.cause!!::class.java)
                 }
             }
         }
 
         on("missing param") {
-            val session = Session(config, mockk(), TextMessage(Gson().toJson(mapOf(
+            val session = Session(config, ws, TextMessage(Gson().toJson(mapOf(
                     "code" to "",
                     "brand" to "",
                     "apikey" to ""
             ))))
             it("should fail") {
-                assertFailsWith<IllegalRequestException> {
-                    session.params
+                assertFalse { session.isAlive() }
+                try{
+                    session.completableFuture.get()
+                    fail("Should throw exception")
+                }catch (e: Exception){
+                    assertEquals(IllegalRequestException::class.java, e.cause!!::class.java)
                 }
             }
         }
@@ -46,7 +62,7 @@ object SessionSpek : Spek({
                     "apikey" to "3",
                     "analog" to "4"
             )
-            val session = Session(config, mockk(), TextMessage(Gson().toJson(params)))
+            val session = Session(config, ws, TextMessage(Gson().toJson(params)))
             it("should succeed") {
                 assertEquals(params, session.params)
             }
