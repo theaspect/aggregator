@@ -89,6 +89,50 @@ if($stdin_line = fgets(STDIN)) {
                 )
             )
         );
+    } else if($code == "mixed"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "normal-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "analog-2",
+                        "params"=> Array(
+                            "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "error-3",
+                        "params"=> Array(
+                            "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                     Array(
+                         "class"=> "timeout-4",
+                         "params"=> Array(
+                             "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                         ),
+                         "code"=> "3310",
+                         "brand"=> "ctr",
+                         "analog"=> "1"
+                     )
+                )
+            )
+        );
     } else if($code == "emptySuppliers"){
         $res = json_encode(
             Array(
@@ -187,6 +231,62 @@ if($stdin_line = fgets(STDIN)) {
                         "class"=> "timeout-3",
                         "params"=> Array(
                             "apikey"=> "4d44cbtf14130d2fsdftpq024kd"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    )
+                )
+            )
+        );
+    } else if($code == "itemsError"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "error-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "error-2",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234",
+                            "domain"=> "msk"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    )
+                )
+            )
+        );
+    } else if($code == "itemsBadJson"){
+        $res = json_encode(
+            Array(
+                "suppliers"=> Array(
+                    Array(
+                        "class"=> "badjson-1",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234"
+                        ),
+                        "code"=> "3310",
+                        "brand"=> "ctr",
+                        "analog"=> "1"
+                    ),
+                    Array(
+                        "class"=> "badjson-2",
+                        "params"=> Array(
+                            "login"=> "log1234",
+                            "password"=> "1234",
+                            "domain"=> "msk"
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",

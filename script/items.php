@@ -98,6 +98,8 @@ if($stdin_line = fgets(STDIN)) {
                 )
             )
         );
+    } else if(preg_match('#^badjson#', $cls) === 1) {
+        $res = "Not a Json response";
     } else if(preg_match('#^timeout#', $cls) === 1) {
         sleep(60);
     } else if(preg_match('#^error#', $cls) === 1) {

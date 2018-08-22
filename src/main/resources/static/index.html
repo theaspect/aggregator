@@ -62,6 +62,17 @@
             submit('ws', data, 'response-analog');
         }
 
+        function mixed(){
+            const data = JSON.stringify({
+                "code": "mixed",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-mixed');
+        }
+
         function badJson() {
             submit('ws', "Not a JSON", 'response-badJson');
         }
@@ -178,6 +189,27 @@
             submit('ws', data, 'response-sessionTimeout');
         }
 
+        function itemsBadResponse() {
+            const data = JSON.stringify({
+                "code": "itemsError",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-itemsBadResponse');
+        }
+
+        function itemsBadJson() {
+            const data = JSON.stringify({
+                "code": "itemsBadJson",
+                "brand": "foo",
+                "apikey": "bar",
+                "analog": "baz"
+            });
+
+            submit('ws', data, 'response-itemsBadJson');
+        }
     </script>
 </head>
 <body>
@@ -203,6 +235,11 @@
         <h2>Normal request with analogs</h2>
         <button onclick="analog()" name="submit">Send Normal Request with analogs</button>
         <div id="response-analog"></div>
+    </div>
+    <div>
+        <h2>Mixed response with analogs and errors</h2>
+        <button onclick="mixed()" name="submit">Get mixed response</button>
+        <div id="response-mixed"></div>
     </div>
     <div>
         <h2>Bad json</h2>
@@ -266,6 +303,16 @@
         <h2>Session Timeout</h2>
         <button onclick="sessionTimeout()" name="submit">Too many suppliers</button>
         <div id="response-sessionTimeout"></div>
+    </div>
+    <div>
+        <h2>Items Bad Response</h2>
+        <button onclick="itemsBadResponse()" name="submit">Bad Response</button>
+        <div id="response-itemsBadResponse"></div>
+    </div>
+    <div>
+        <h2>Items Bad Json</h2>
+        <button onclick="itemsBadJson()" name="submit">Bad Json</button>
+        <div id="response-itemsBadJson"></div>
     </div>
 </div>
 
