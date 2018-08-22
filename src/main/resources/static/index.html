@@ -4,25 +4,33 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script>
-        let socket;
+        let socket = {};
 
         // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
         function submit(url, data, response) {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.close(1000)
+            if (socket[response] && socket[response].readyState === WebSocket.OPEN) {
+                socket[response].close(1000)
             }
 
-            socket = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/" + url);
-            socket.onopen = ev => {
+            socket[response] = new WebSocket(
+                ((window.location.protocol === "https:") ? "wss://" : "ws://") +
+                window.location.host +
+                (window.location.pathname.endsWith("/") ? window.location.pathname : window.location.pathname + "/") +
+                url);
+            socket[response].onopen = ev => {
                 document.getElementById(response).innerHTML = ev.type + "<br/>";
 
-                socket.send(data);
+                socket[response].send(data);
             };
-            socket.onmessage = (data) => document.getElementById(response).innerHTML += "<br/>" + data.data;
-            socket.onclose = ev => document.getElementById(response).innerHTML += "<br/>" + ev.type;
-            return socket
+            socket[response].onmessage = (data) => document.getElementById(response).innerHTML += "<br/>" + data.data;
+            socket[response].onclose = ev => document.getElementById(response).innerHTML += "<br/>" + ev.type;
+            return socket[response]
         }
 
+        function clickAll() {
+            document.querySelectorAll("[name='submit']").forEach((btn) => btn.onclick());
+        }
+        
         function echo() {
             const data = JSON.stringify({
                 foo: document.getElementById("foo").value,
@@ -179,6 +187,10 @@
     <label for="bar">Bar:</label><input id="bar" name="bar" value="bar"/><br/>
     <button onclick="echo()" name="submit">Send Echo Request</button>
     <div id="response-echo"></div>
+</div>
+<div>
+    <h1>Test</h1>
+    <button onclick="clickAll()" name="not-a-submit">Send All Requests</button>
 </div>
 <div>
     <h1>Request</h1>
