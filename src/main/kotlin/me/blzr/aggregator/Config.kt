@@ -27,9 +27,9 @@ class Config {
     }
 
     class Fields {
-        lateinit var request: List<String>
-        lateinit var items: String
-        lateinit var suppliers: String
+        var request: List<String> = listOf("code", "brand", "apikey", "analog")
+        var items: String = "items"
+        var suppliers: String = "suppliers"
         lateinit var faulty: List<String>
     }
 }

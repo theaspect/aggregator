@@ -15,7 +15,6 @@ import kotlin.test.assertFailsWith
 object SessionRegistrySpek : Spek({
     describe("A Registry with sessions") {
         val config = Config()
-        config.fields.request = listOf("code", "brand", "apikey", "analog")
 
         val sessionRegistry = SessionRegistry(config)
         val ws1 = mockk<WebSocketSession>()

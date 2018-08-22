@@ -19,7 +19,6 @@ import kotlin.test.fail
 object SessionSpek : Spek({
     describe("A Session") {
         val config = Config()
-        config.fields.request = listOf("code", "brand", "apikey", "analog")
 
         val ws = mockk<WebSocketSession>()
         every { ws.id } returns "1"
