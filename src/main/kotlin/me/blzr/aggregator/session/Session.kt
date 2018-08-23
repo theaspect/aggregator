@@ -119,6 +119,8 @@ class Session(
         }
     }
 
+    fun tasks() = tasks.size
+
     override fun toString(): String {
         return "Session#${session.id} params: $params tasks: ${tasks.size} open: ${isOpen()} destroyed: $isDestroyed age: ${System.currentTimeMillis() - age}"
     }

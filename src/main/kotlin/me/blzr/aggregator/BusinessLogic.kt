@@ -25,7 +25,10 @@ class BusinessLogic(
     private final val log = LoggerFactory.getLogger(BusinessLogic::class.java)
     private final val executor = Executors.newFixedThreadPool(2, NamedThread("business-logic"))
 
+    val sessionCount = AtomicLong(0)
     val taskId = AtomicLong(0)
+    val taskFailCount = AtomicLong(0)
+    val taskSuccessCount = AtomicLong(0)
 
     init {
         executor.submit {
@@ -40,7 +43,7 @@ class BusinessLogic(
     fun newSession(session: WebSocketSession, message: TextMessage) {
         executor.submit {
             val s = Session(config, session, message)
-            sessionRegistry.addSession(s)
+            if (sessionRegistry.addSession(s)) sessionCount.incrementAndGet()
             s.completableFuture
                     .thenApplyAsync(Function { normal: Boolean -> s.close(normal) }, executor)
                     .exceptionally { e ->
@@ -66,9 +69,13 @@ class BusinessLogic(
         session.addTask(task)
         scriptQueue
                 .addTask(task)
-                .thenApplyAsync(Function<SuppliersTask.SuppliersResponse, Unit> { res -> items(session, res) }, executor)
+                .thenApplyAsync(Function<SuppliersTask.SuppliersResponse, Unit> { res ->
+                    taskSuccessCount.incrementAndGet()
+                    items(session, res)
+                }, executor)
                 .exceptionally { e ->
                     log.error("Error in suppliers $session", e)
+                    taskFailCount.incrementAndGet()
                     // E is j.u.c.CompletionException
                     sendError(session, null, e.cause ?: e)
                 }.thenApply { session.removeTask(task) }
@@ -84,9 +91,13 @@ class BusinessLogic(
             session.addTask(task)
             scriptQueue
                     .addTask(task)
-                    .thenApplyAsync(Function<ItemsTask.ItemsResponse, Unit> { res -> response(session, res) }, executor)
+                    .thenApplyAsync(Function<ItemsTask.ItemsResponse, Unit> { res ->
+                        taskSuccessCount.incrementAndGet()
+                        response(session, res)
+                    }, executor)
                     .exceptionally { e ->
                         log.error("Error in item $session", e.cause)
+                        taskFailCount.incrementAndGet()
                         // E is j.u.c.CompletionException
                         sendError(session, task, e.cause ?: e)
                     }.thenApply { session.removeTask(task) }
@@ -131,4 +142,14 @@ class BusinessLogic(
         log.warn("Send Error to $session: $response")
         session.sendMessage(response)
     }
+
+    fun getStats() = mapOf(
+            "sessionTotal" to sessionCount.get(),
+            "sessionPending" to sessionRegistry.pending(),
+            "sessionAlive" to sessionRegistry.alive(),
+            "taskTotal" to taskId.get(),
+            "taskPending" to sessionRegistry.tasks(),
+            "taskSucceeded" to taskSuccessCount.get(),
+            "taskFailed" to taskFailCount.get()
+            )
 }

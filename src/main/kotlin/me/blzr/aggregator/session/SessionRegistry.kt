@@ -22,12 +22,12 @@ class SessionRegistry(
     private val sessions = LinkedBlockingQueue<Session>()
     private val sessionMap = WeakHashMap<WebSocketSession, Session>()
 
-    fun addSession(session: Session) {
+    fun addSession(session: Session): Boolean {
         sessionMap[session.session] = session
 
         if (!session.isAlive()) {
             log.warn("Session already dead: $session")
-            return
+            return false
         }
 
         log.info("New $session")
@@ -43,6 +43,7 @@ class SessionRegistry(
                 session.fail(SessionTimeoutException())
             }
         }, config.timeout.session, TimeUnit.SECONDS)
+        return true
     }
 
     // TODO wrap into stream
@@ -55,4 +56,8 @@ class SessionRegistry(
         log.debug("Session ${session.id} closed by browser")
         sessionMap[session]?.fail(SessionClosedException())
     }
+
+    fun pending() = sessions.size.toLong()
+    fun alive() = sessionMap.values.count { it.isAlive() }
+    fun tasks() = sessionMap.values.map { it.tasks() }.sum()
 }
