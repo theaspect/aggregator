@@ -210,9 +210,34 @@
 
             submit('ws', data, 'response-itemsBadJson');
         }
+
+        function getStats() {
+            fetch('stats')
+                .then((response) => response.json())
+                .then((data) => {
+                    ["sessionTotal", "sessionPending", "sessionAlive", "taskTotal",
+                        "taskPending", "taskSucceeded", "taskFailed"]
+                        .forEach((field) => document.getElementById(field).innerText = data[field]);
+                })
+                .catch((e) => console.log(e))
+                .finally(() => setTimeout(getStats, 1000));
+        }
+
+        setTimeout(getStats, 1000);
     </script>
 </head>
 <body>
+<div>
+    <h1>Stats</h1>
+
+    <div>Total sessions: <strong id="sessionTotal"></strong></div>
+    <div>Pending Sessions: <strong id="sessionPending"></strong></div>
+    <div>Alive Sessions: <strong id="sessionAlive"></strong></div>
+    <div>Total tasks: <strong id="taskTotal"></strong></div>
+    <div>Pending tasks: <strong id="taskPending"></strong></div>
+    <div>Succeed tasks: <strong id="taskSucceeded"></strong></div>
+    <div>Failed tasks: <strong id="taskFailed"></strong></strong
+</div>
 <div>
     <h1>Echo Test</h1>
     <label for="foo">Foo:</label><input id="foo" name="foo" value="foo"/><br/>

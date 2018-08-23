@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 class StatsController(val businessLogic: BusinessLogic) {
     private final val log = LoggerFactory.getLogger(StatsController::class.java)
 
-    @RequestMapping("/stat")
+    @RequestMapping("/stats")
     @ResponseBody
     fun index(): Map<String, Any> {
         return businessLogic.getStats()
