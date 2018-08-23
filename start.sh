@@ -9,7 +9,7 @@ echo attempt to kill $PID
 
 pkill -F pid java
 
-java -jar -Xms64m -Xmx64m -Xss1m aggregator-$VERSION.jar > /dev/null &
+java -Dserver.port=8000 -Xms64m -Xmx64m -Xss1m -jar aggregator-$VERSION.jar > /dev/null &
 echo $! > pid
 echo started process $!
 
