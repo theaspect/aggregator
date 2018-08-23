@@ -215,9 +215,10 @@
             fetch('stats')
                 .then((response) => response.json())
                 .then((data) => {
-                    ["sessionTotal", "sessionPending", "sessionAlive", "taskTotal",
-                        "taskPending", "taskSucceeded", "taskFailed"]
-                        .forEach((field) => document.getElementById(field).innerText = data[field]);
+                    [
+                        "uptime", "sessionTotal", "sessionAlive", "sessionFinished",
+                        "taskTotal", "taskPending", "taskSucceeded", "taskFailed"
+                    ].forEach((field) => document.getElementById(field).innerText = data[field]);
                 })
                 .catch((e) => console.log(e))
                 .finally(() => setTimeout(getStats, 1000));
@@ -230,13 +231,14 @@
 <div>
     <h1>Stats</h1>
 
+    <div>Uptime: <strong id="uptime"></strong></div>
     <div>Total sessions: <strong id="sessionTotal"></strong></div>
-    <div>Pending Sessions: <strong id="sessionPending"></strong></div>
-    <div>Alive Sessions: <strong id="sessionAlive"></strong></div>
+    <div>Alive sessions: <strong id="sessionAlive"></strong></div>
+    <div>Finished sessions: <strong id="sessionFinished"></strong></div>
     <div>Total tasks: <strong id="taskTotal"></strong></div>
     <div>Pending tasks: <strong id="taskPending"></strong></div>
     <div>Succeed tasks: <strong id="taskSucceeded"></strong></div>
-    <div>Failed tasks: <strong id="taskFailed"></strong></strong
+    <div>Failed tasks: <strong id="taskFailed"></strong></div>
 </div>
 <div>
     <h1>Echo Test</h1>

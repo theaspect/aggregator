@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Function
@@ -26,9 +27,11 @@ class BusinessLogic(
     private final val executor = Executors.newFixedThreadPool(2, NamedThread("business-logic"))
 
     val sessionCount = AtomicLong(0)
+    val sessionFinished = AtomicLong(0)
     val taskId = AtomicLong(0)
     val taskFailCount = AtomicLong(0)
     val taskSuccessCount = AtomicLong(0)
+    val start = System.currentTimeMillis()
 
     init {
         executor.submit {
@@ -43,14 +46,20 @@ class BusinessLogic(
     fun newSession(session: WebSocketSession, message: TextMessage) {
         executor.submit {
             val s = Session(config, session, message)
-            if (sessionRegistry.addSession(s)) sessionCount.incrementAndGet()
+            sessionCount.incrementAndGet()
+            sessionRegistry.addSession(s)
             s.completableFuture
-                    .thenApplyAsync(Function { normal: Boolean -> s.close(normal) }, executor)
+                    .thenApplyAsync(Function { normal: Boolean ->
+                        log.error("Session completed $session $normal")
+                        sessionFinished.incrementAndGet()
+                        s.close(normal)
+                    }, executor)
                     .exceptionally { e ->
                         log.error("Session completed exceptionally $session", e)
                         // E is j.u.c.CompletionException
                         sendError(s, null, e.cause ?: e)
                         s.fail(e)
+                        sessionFinished.incrementAndGet()
                         s.close(false)
                     }
         }
@@ -143,10 +152,19 @@ class BusinessLogic(
         session.sendMessage(response)
     }
 
+    fun uptime(): String =
+            Duration.ofMillis(System.currentTimeMillis() - start)
+                    .toString()
+                    .substring(2)
+                    .replace("(\\d+)(\\.\\d+)?([HMS])".toRegex(), "$1$3 ")
+                    .toLowerCase()
+                    .trim()
+
     fun getStats() = mapOf(
+            "uptime" to uptime(),
             "sessionTotal" to sessionCount.get(),
-            "sessionPending" to sessionRegistry.pending(),
             "sessionAlive" to sessionRegistry.alive(),
+            "sessionFinished" to sessionFinished.get(),
             "taskTotal" to taskId.get(),
             "taskPending" to sessionRegistry.tasks(),
             "taskSucceeded" to taskSuccessCount.get(),

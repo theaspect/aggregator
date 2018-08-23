@@ -57,7 +57,6 @@ class SessionRegistry(
         sessionMap[session]?.fail(SessionClosedException())
     }
 
-    fun pending() = sessions.size.toLong()
     fun alive() = sessionMap.values.count { it.isAlive() }
     fun tasks() = sessionMap.values.map { it.tasks() }.sum()
 }
