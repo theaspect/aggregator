@@ -14,6 +14,7 @@ abstract class ScriptTask<REQ, RES>(val taskId: Long, private val request: REQ) 
     private var process: Process? = null
     protected var state: State = State.PENDING
 
+    abstract fun getTaskName(): String
     abstract fun getScript(): List<String>
     abstract fun parse(input: String): RES
 
@@ -64,16 +65,20 @@ abstract class ScriptTask<REQ, RES>(val taskId: Long, private val request: REQ) 
 
             // It's safe because watchdog will kill this process eventually
             val exitCode = ps.waitFor()
+
+            // Always output stderr
+            try {
+                val stderr = ps.errorStream.bufferedReader().readText()
+                log.debug("Output from script:\n$stderr")
+            } catch (e: Exception) {
+                // We can't know if stream was closed
+                log.debug("Can't read stderr from script")
+            }
+
             if (exitCode > 0) {
                 // 143 means 15
                 log.error("Exit code from $this: $exitCode")
-                try {
-                    val stderr = ps.errorStream.bufferedReader().readText()
-                    log.debug("Output from script:\n$stderr")
-                } catch (e: Exception) {
-                    // We can't know if stream was closed
-                    log.debug("Can't read stderr from script")
-                }
+
                 throw ScriptErrorException()
             }
 

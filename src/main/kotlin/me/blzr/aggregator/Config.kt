@@ -30,6 +30,7 @@ class Config {
         var request: List<String> = listOf("code", "brand", "apikey", "analog")
         var items: String = "items"
         var suppliers: String = "suppliers"
+        val info: String = "info"
         lateinit var faulty: List<String>
     }
 }

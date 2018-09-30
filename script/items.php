@@ -75,7 +75,11 @@ if($stdin_line = fgets(STDIN)) {
                                 ),
                                 "code"=> "3310",
                                 "brand"=> "ctr",
-                                "analog"=> "1"
+                                "analog"=> "1",
+                                "info"=> Array(
+                                    "foo" => 1,
+                                    "bar" => 2
+                                )
                             ),
                             Array(
                                 "class"=> "normal-2",
@@ -86,7 +90,11 @@ if($stdin_line = fgets(STDIN)) {
                                 ),
                                 "code"=> "3310",
                                 "brand"=> "ctr",
-                                "analog"=> "1"
+                                "analog"=> "1",
+                                "info"=> Array(
+                                    "foo" => 1,
+                                    "bar" => 2
+                                )
                             )
                         )
                     )

@@ -35,6 +35,7 @@ class BusinessLogic(
 
     init {
         executor.submit {
+            // Begin pipeline when new session registered in #newSession
             // This is blocking await
             while (true) {
                 suppliers(sessionRegistry.awaitSession())
@@ -42,7 +43,12 @@ class BusinessLogic(
         }
     }
 
-    // Should we create two queues
+    /**
+     * Ne session opened by browser
+     * See WebSocketHandler#handleTextMessage
+     *
+     * TODO Should we create two queues?
+     */
     fun newSession(session: WebSocketSession, message: TextMessage) {
         executor.submit {
             val s = Session(config, session, message)
@@ -50,11 +56,14 @@ class BusinessLogic(
             sessionRegistry.addSession(s)
             s.completableFuture
                     .thenApplyAsync(Function { normal: Boolean ->
+                        // In case session closed normally i.e. no more tasks
                         log.error("Session completed $session $normal")
                         sessionFinished.incrementAndGet()
                         s.close(normal)
                     }, executor)
                     .exceptionally { e ->
+                        // In case session closed by browser or by timeout
+                        // See SessionRegistry#addSession
                         log.error("Session completed exceptionally $session", e)
                         // E is j.u.c.CompletionException
                         sendError(s, null, e.cause ?: e)
@@ -65,6 +74,10 @@ class BusinessLogic(
         }
     }
 
+    /**
+     * Connection closed by browser
+     * See WebSocketHandler#afterConnectionClosed
+     */
     fun closeSession(session: WebSocketSession, status: CloseStatus) {
         executor.submit { sessionRegistry.close(session) }
     }
@@ -91,24 +104,31 @@ class BusinessLogic(
     }
 
     /**
-     * 2. Generate response task from onSuppliers
+     * 2. Generate one task per supplier from onSuppliers response
      */
     private fun items(session: Session, suppliers: SuppliersTask.SuppliersResponse) {
         log.debug("Items step $session")
-        suppliers.items.filterNotNull().forEach { item ->
-            val task = ItemsTask(taskId.incrementAndGet(), config, item)
+        suppliers.items.forEach { item ->
+            val task = ItemsTask(taskId.incrementAndGet(), config, item,
+                    info = if (item.containsKey(config.fields.info)) {
+                        item[config.fields.info]
+                    } else {
+                        null
+                    })
             session.addTask(task)
+            sendStatus(session, task, Status.PENDING)
             scriptQueue
                     .addTask(task)
                     .thenApplyAsync(Function<ItemsTask.ItemsResponse, Unit> { res ->
                         taskSuccessCount.incrementAndGet()
-                        response(session, res)
+                        response(session, task, res)
+                        sendStatus(session, task, Status.SUCCESS)
                     }, executor)
                     .exceptionally { e ->
                         log.error("Error in item $session", e.cause)
                         taskFailCount.incrementAndGet()
                         // E is j.u.c.CompletionException
-                        sendError(session, task, e.cause ?: e)
+                        sendError(session, task, e.cause ?: e, task.info)
                     }.thenApply { session.removeTask(task) }
         }
     }
@@ -116,38 +136,31 @@ class BusinessLogic(
     /**
      * 3. Send response responses
      */
-    private fun response(session: Session, items: ItemsTask.ItemsResponse) {
+    private fun response(session: Session, task: ItemsTask, items: ItemsTask.ItemsResponse) {
         log.debug("Items Response $session")
-        items.items.filterNotNull().forEach { item ->
-            sendItem(session, item)
+        items.items.forEach { item ->
+            sendItem(session, task, item)
         }
 
         // Add suppliers if any for recursive request
         items(session, SuppliersTask.SuppliersResponse(items.suppliers))
     }
 
-    private fun sendItem(session: Session, item: Any) {
+    private fun sendItem(session: Session, task: ItemsTask, item: Map<String, *>) {
         log.debug("Sent Item to $session")
-        session.sendMessage(item)
+        session.sendMessage(toMessage(session, task, Status.SENDING, info = task.info).plus(item))
+    }
+
+    private fun sendStatus(session: Session, task: ItemsTask, status: Status) {
+        log.debug("In session $session $task : $status")
+        session.sendMessage(toMessage(session, task, status, info = task.info))
     }
 
     /**
      * Try to send all available params from session
      */
-    private fun sendError(session: Session, task: ScriptTask<*, *>?, e: Throwable) {
-        val response = if (e is AggregatorException) {
-            session.params.filterKeys { config.fields.faulty.contains(it) }
-                    .plus("session" to session.id)
-                    .plus("task" to (task?.taskId ?: ""))
-                    .plus("error" to e.message)
-        } else {
-            log.error("Unknown exception", e)
-            session.params.filterKeys { config.fields.faulty.contains(it) }
-                    .plus("id" to session.id)
-                    .plus("task" to (task?.taskId ?: ""))
-                    .plus("error" to UnrecognizedException().message)
-        }
-
+    private fun sendError(session: Session, task: ScriptTask<*, *>?, e: Throwable, info: Any? = null) {
+        val response = toMessage(session, task, Status.ERROR, config.fields.faulty, info, e)
         log.warn("Send Error to $session: $response")
         session.sendMessage(response)
     }
@@ -170,4 +183,48 @@ class BusinessLogic(
             "taskSucceeded" to taskSuccessCount.get(),
             "taskFailed" to taskFailCount.get()
             )
+
+    fun toMessage(session: Session,
+                  task: ScriptTask<*, *>?,
+                  status: Status,
+            // Params is get from session request
+                  params: List<String> = listOf(),
+            // Info is tekan from suppliers response
+                  info: Any? = null,
+                  e: Throwable? = null
+    ): Map<String, Any?> {
+        var response: Map<String, Any?> = mapOf(
+                "_session" to session.id,
+                "_task" to (task?.getTaskName() ?: "UNKNOWN"),
+                "_id" to (task?.taskId ?: ""),
+                "_status" to status.toString())
+
+        if (params.isNotEmpty()) {
+            val filteredParams = session.params.filterKeys { params.contains(it) }
+            if (filteredParams.isNotEmpty()) {
+                response += "_params" to filteredParams
+            }
+        }
+
+        if (info != null) {
+            response += ("_info" to info)
+        }
+
+        if (status == Status.ERROR) {
+            response += (
+                    "_error" to
+                            if (e is AggregatorException) {
+                                e.message
+                            } else {
+                                log.error("Unknown exception", e)
+                                UnrecognizedException().message
+                            })
+        }
+
+        return response
+    }
+
+    enum class Status {
+        PENDING, SENDING, SUCCESS, ERROR
+    }
 }

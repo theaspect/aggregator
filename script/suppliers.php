@@ -27,7 +27,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "normal-2",
@@ -38,7 +42,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "normal-3",
@@ -47,7 +55,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -64,7 +76,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "normal-2",
@@ -75,7 +91,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "analog-3",
@@ -84,7 +104,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -101,7 +125,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "analog-2",
@@ -110,7 +138,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "error-3",
@@ -119,7 +151,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                      Array(
                          "class"=> "timeout-4",
@@ -128,7 +164,11 @@ if($stdin_line = fgets(STDIN)) {
                          ),
                          "code"=> "3310",
                          "brand"=> "ctr",
-                         "analog"=> "1"
+                         "analog"=> "1",
+                         "info"=> Array(
+                             "foo" => 1,
+                             "bar" => 2
+                         )
                      )
                 )
             )
@@ -160,7 +200,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -177,7 +221,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "empty-2",
@@ -188,7 +236,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "empty-3",
@@ -197,7 +249,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -214,7 +270,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "timeout-2",
@@ -225,7 +285,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "timeout-3",
@@ -234,7 +298,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -251,7 +319,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "error-2",
@@ -262,7 +334,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -279,7 +355,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     ),
                     Array(
                         "class"=> "badjson-2",
@@ -290,7 +370,11 @@ if($stdin_line = fgets(STDIN)) {
                         ),
                         "code"=> "3310",
                         "brand"=> "ctr",
-                        "analog"=> "1"
+                        "analog"=> "1",
+                        "info"=> Array(
+                            "foo" => 1,
+                            "bar" => 2
+                        )
                     )
                 )
             )
@@ -305,7 +389,11 @@ if($stdin_line = fgets(STDIN)) {
                        ),
                        "code"=> "3310",
                        "brand"=> "ctr",
-                       "analog"=> "1"
+                       "analog"=> "1",
+                       "info"=> Array(
+                           "foo" => 1,
+                           "bar" => 2
+                       )
                    )
                );
         // Spam with number of suppliers >> pool size (20)
@@ -319,7 +407,11 @@ if($stdin_line = fgets(STDIN)) {
                     ),
                     "code"=> "3310",
                     "brand"=> "ctr",
-                    "analog"=> "1"
+                    "analog"=> "1",
+                    "info"=> Array(
+                        "foo" => 1,
+                        "bar" => 2
+                    )
                 )
             );
         }

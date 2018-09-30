@@ -19,8 +19,8 @@ class WebSocketConfig(
         val businessLogic: BusinessLogic) : WebSocketConfigurer {
 
     override fun registerWebSocketHandlers(registry: WebSocketHandlerRegistry) {
-        registry.addHandler(EchoWebSocketHandler(), "/echo")
-        registry.addHandler(WebSocketHandler(businessLogic), "/ws")
+        registry.addHandler(EchoWebSocketHandler(), "/echo").setAllowedOrigins("*")
+        registry.addHandler(WebSocketHandler(businessLogic), "/ws").setAllowedOrigins("*")
     }
 }
 

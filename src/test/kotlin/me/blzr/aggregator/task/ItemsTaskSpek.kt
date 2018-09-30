@@ -42,7 +42,7 @@ object ItemsTaskSpek : Spek({
                 ]
             }
             """.trimIndent()
-                val response = ItemsTask(0, config, "").parse(json)
+                val response = ItemsTask(0, config, "", mapOf("foo" to "bar")).parse(json)
 
                 assertEquals(3, response.items.size)
                 assertEquals(0, response.suppliers.size)
@@ -111,7 +111,7 @@ object ItemsTaskSpek : Spek({
                 ]
             }
             """.trimIndent()
-                val response = ItemsTask(0, config, "").parse(json)
+                val response = ItemsTask(0, config, "", mapOf("foo" to "bar")).parse(json)
 
                 assertEquals(3, response.items.size)
                 assertEquals(3, response.suppliers.size)
@@ -147,7 +147,7 @@ object ItemsTaskSpek : Spek({
                 }
                 """.trimIndent()
                 assertFailsWith<ItemsResponseException> {
-                    ItemsTask(0, config, "").parse(json)
+                    ItemsTask(0, config, "", mapOf("foo" to "bar")).parse(json)
                 }
             }
         }
@@ -156,7 +156,7 @@ object ItemsTaskSpek : Spek({
             it("should fail") {
                 val json = "Not a JSON"
                 assertFailsWith<ItemsJsonException> {
-                    ItemsTask(0, config, "").parse(json)
+                    ItemsTask(0, config, "", mapOf("foo" to "bar")).parse(json)
                 }
             }
         }
