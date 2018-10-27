@@ -17,8 +17,8 @@ class Config {
     }
 
     class Timeout {
-        var script: Long = 5
-        var session: Long = 30
+        var script: Long = 30
+        var session: Long = 120
     }
 
     class Pool {
