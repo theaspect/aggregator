@@ -20,10 +20,10 @@ class SessionRegistry(
     private val watchdog = Executors.newScheduledThreadPool(config.pool.watchdog, NamedThread("session-watchdog"))
     // Primary queue of new sessions
     private val sessions = LinkedBlockingQueue<Session>()
-    private val sessionMap = WeakHashMap<WebSocketSession, Session>()
+    private val sessionMap = WeakHashMap<Session, Boolean>()
 
     fun addSession(session: Session): Boolean {
-        sessionMap[session.session] = session
+        sessionMap[session] = true
 
         if (!session.isAlive()) {
             log.warn("Session already dead: $session")
@@ -54,9 +54,12 @@ class SessionRegistry(
 
     fun close(session: WebSocketSession) {
         log.debug("Session ${session.id} closed by browser")
-        sessionMap[session]?.fail(SessionClosedException())
+        val exception = SessionClosedException()
+        // Notify all sessions
+        sessionMap.keys.forEach { it.failByWebsocket(session, exception) }
     }
 
-    fun alive() = sessionMap.values.count { it.isAlive() }
-    fun tasks() = sessionMap.values.map { it.tasks() }.sum()
+    fun total() = sessionMap.size
+    fun alive() = sessionMap.keys.count { it.isAlive() }
+    fun tasks() = sessionMap.keys.map { it.tasks() }.sum()
 }

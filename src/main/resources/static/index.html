@@ -216,7 +216,7 @@
                 .then((response) => response.json())
                 .then((data) => {
                     [
-                        "uptime", "sessionTotal", "sessionAlive", "sessionFinished",
+                        "uptime", "sessionTotal", "sessionRegistry", "sessionAlive", "sessionFinished",
                         "taskTotal", "taskPending", "taskSucceeded", "taskFailed"
                     ].forEach((field) => document.getElementById(field).innerText = data[field]);
                 })
@@ -233,6 +233,7 @@
 
     <div>Uptime: <strong id="uptime"></strong></div>
     <div>Total sessions: <strong id="sessionTotal"></strong></div>
+    <div>Registered sessions: <strong id="sessionRegistry"></strong></div>
     <div>Alive sessions: <strong id="sessionAlive"></strong></div>
     <div>Finished sessions: <strong id="sessionFinished"></strong></div>
     <div>Total tasks: <strong id="taskTotal"></strong></div>

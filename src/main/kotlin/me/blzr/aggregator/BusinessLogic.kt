@@ -176,6 +176,7 @@ class BusinessLogic(
     fun getStats() = mapOf(
             "uptime" to uptime(),
             "sessionTotal" to sessionCount.get(),
+            "sessionRegistry" to sessionRegistry.total(),
             "sessionAlive" to sessionRegistry.alive(),
             "sessionFinished" to sessionFinished.get(),
             "taskTotal" to taskId.get(),

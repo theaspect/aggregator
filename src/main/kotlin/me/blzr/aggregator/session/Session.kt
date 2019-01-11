@@ -56,6 +56,11 @@ class Session(
     fun isAlive() = isOpen() && !isDestroyed
 
     @Synchronized
+    fun failByWebsocket(ws: WebSocketSession, e: Throwable) {
+        if (ws == this.session) { fail(e) }
+    }
+
+    @Synchronized
     fun fail(e: Throwable) {
         if (isDestroyed && tasks.isEmpty()) {
             // No need to do anything if we receive event from web socket
