@@ -165,16 +165,18 @@ class BusinessLogic(
         session.sendMessage(response)
     }
 
-    fun uptime(): String =
-            Duration.ofMillis(System.currentTimeMillis() - start)
+    fun uptime() = System.currentTimeMillis() - start
+    fun uptimeHuman(): String =
+            Duration.ofMillis(uptime())
                     .toString()
                     .substring(2)
                     .replace("(\\d+)(\\.\\d+)?([HMS])".toRegex(), "$1$3 ")
                     .toLowerCase()
                     .trim()
 
-    fun getStats() = mapOf(
+    fun getStats(): Map<String, Number> = mapOf(
             "uptime" to uptime(),
+//            "uptimeHuman" to uptimeHuman(),
             "sessionTotal" to sessionCount.get(),
             "sessionRegistry" to sessionRegistry.total(),
             "sessionAlive" to sessionRegistry.alive(),

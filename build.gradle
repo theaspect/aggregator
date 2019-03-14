@@ -33,7 +33,7 @@ junitPlatform {
 }
 
 group = 'me.blzr'
-version = '0.6'
+version = '0.7'
 sourceCompatibility = 1.8
 compileKotlin {
     kotlinOptions {
@@ -64,6 +64,11 @@ dependencies {
     compile('com.fasterxml.jackson.module:jackson-module-kotlin')
     compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compile("org.jetbrains.kotlin:kotlin-reflect")
+
+    // Prometheus
+    compile("io.prometheus:simpleclient:0.6.0")
+    compile("io.prometheus:simpleclient_common:0.6.0")
+
     testCompile('org.springframework.boot:spring-boot-starter-test')
 
     // Spek Framework

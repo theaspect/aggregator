@@ -10,6 +10,11 @@ class Config {
     val timeout = Timeout()
     val pool = Pool()
     val fields = Fields()
+    val prometheus = Prometheus()
+
+    class Prometheus {
+        var node: String = "node0"
+    }
 
     class Script {
         lateinit var items: String
