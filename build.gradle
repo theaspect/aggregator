@@ -84,7 +84,7 @@ dependencies {
     }
     // Mocks
     // see https://mockk.io
-    testImplementation "io.mockk:mockk:1.12.2"
+    testImplementation "io.mockk:mockk:1.12.3"
 
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
