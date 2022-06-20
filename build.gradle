@@ -67,7 +67,7 @@ dependencies {
 
     // Prometheus
     compile("io.prometheus:simpleclient:0.15.0")
-    compile("io.prometheus:simpleclient_common:0.15.0")
+    compile("io.prometheus:simpleclient_common:0.16.0")
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
 
